@@ -49,28 +49,28 @@ frame:SetScript("OnShow", function(self)
 
     -- Armor class mappings
     local armorTypes = {
-        {key = "Cloth", label = "Cloth"},
-        {key = "Leather", label = "Leather"},
-        {key = "Mail", label = "Mail"},
-        {key = "Plate", label = "Plate"}
+        {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth)},
+        {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather)},
+        {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail)},
+        {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate)}
     }
 
     -- Weapon type mappings
     local weaponTypes = {
-        {key = "OneHandAxe", label = "One-Handed Axe"},
-        {key = "TwoHandAxe", label = "Two-Handed Axe"},
-        {key = "OneHandMace", label = "One-Handed Mace"},
-        {key = "TwoHandMace", label = "Two-Handed Mace"},
-        {key = "OneHandSword", label = "One-Handed Sword"},
-        {key = "TwoHandSword", label = "Two-Handed Sword"},
-        {key = "Staff", label = "Staff"},
-        {key = "Polearm", label = "Polearm"},
-        {key = "Bow", label = "Bow"},
-        {key = "Crossbow", label = "Crossbow"},
-        {key = "Gun", label = "Gun"},
-        {key = "Dagger", label = "Dagger"},
-        {key = "Fist", label = "Fist Weapon"},
-        {key = "Wand", label = "Wand"}
+        {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H)},
+        {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H)},
+        {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H)},
+        {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H)},
+        {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H)},
+        {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H)},
+        {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff)},
+        {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm)},
+        {key = Enum.ItemWeaponSubclass.Bow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bow)},
+        {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow)},
+        {key = Enum.ItemWeaponSubclass.Gun, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Gun)},
+        {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger)},
+        {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed)},
+        {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand)}
     }
 
     local yOffset = -80
