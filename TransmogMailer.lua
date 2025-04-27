@@ -6,44 +6,45 @@ local frame = CreateFrame("Frame")
 
 -- Check if an item is BoE and its transmog status
 local function IsItemEligible(itemLink)
-    if not itemLink then return false end
-    local bindType = select(14, GetItemInfo(itemLink))
-    if bindType ~= LE_ITEM_BIND_ON_EQUIP then return false end
-
-    -- Check if the appearance is learnable and unlearned
-    if CanIMogIt then
-        local canLearn = CanIMogIt:IsLearnable(itemLink)
-        local learned = CanIMogIt:IsLearned(itemLink)
-        return canLearn and not learned
+    if not itemLink or not CanIMogIt then
+        return false
     end
-    return false -- Fail-safe if CanIMogIt is not loaded
+    local bindType = select(14, GetItemInfo(itemLink))
+    if bindType ~= LE_ITEM_BIND_ON_EQUIP then
+        return false
+    end
+    local canLearn = CanIMogIt:IsLearnable(itemLink)
+    local learned = CanIMogIt:IsLearned(itemLink)
+    return canLearn and not learned
 end
 
 -- Get the recipient for an armor or weapon type
 local function GetRecipient(itemType, itemSubTypeID)
     local key
     if itemType == LE_ITEM_CLASS_ARMOR then
-        if itemSubTypeID == Enum.ItemArmorSubclass.Cloth then key = Enum.ItemArmorSubclass.Cloth
-        elseif itemSubTypeID == Enum.ItemArmorSubclass.Leather then key = Enum.ItemArmorSubclass.Leather
-        elseif itemSubTypeID == Enum.ItemArmorSubclass.Mail then key = Enum.ItemArmorSubclass.Mail
-        elseif itemSubTypeID == Enum.ItemArmorSubclass.Plate then key = Enum.ItemArmorSubclass.Plate
-        end
+        key = ({
+            [Enum.ItemArmorSubclass.Cloth] = Enum.ItemArmorSubclass.Cloth,
+            [Enum.ItemArmorSubclass.Leather] = Enum.ItemArmorSubclass.Leather,
+            [Enum.ItemArmorSubclass.Mail] = Enum.ItemArmorSubclass.Mail,
+            [Enum.ItemArmorSubclass.Plate] = Enum.ItemArmorSubclass.Plate
+        })[itemSubTypeID]
     elseif itemType == LE_ITEM_CLASS_WEAPON then
-        if itemSubTypeID == Enum.ItemWeaponSubclass.Axe1H then key = Enum.ItemWeaponSubclass.Axe1H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Axe2H then key = Enum.ItemWeaponSubclass.Axe2H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Mace1H then key = Enum.ItemWeaponSubclass.Mace1H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Mace2H then key = Enum.ItemWeaponSubclass.Mace2H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Sword1H then key = Enum.ItemWeaponSubclass.Sword1H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Sword2H then key = Enum.ItemWeaponSubclass.Sword2H
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Staff then key = Enum.ItemWeaponSubclass.Staff
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Polearm then key = Enum.ItemWeaponSubclass.Polearm
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Bow then key = Enum.ItemWeaponSubclass.Bow
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Crossbow then key = Enum.ItemWeaponSubclass.Crossbow
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Gun then key = Enum.ItemWeaponSubclass.Gun
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Dagger then key = Enum.ItemWeaponSubclass.Dagger
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Unarmed then key = Enum.ItemWeaponSubclass.Unarmed
-        elseif itemSubTypeID == Enum.ItemWeaponSubclass.Wand then key = Enum.ItemWeaponSubclass.Wand
-        end
+        key = ({
+            [Enum.ItemWeaponSubclass.Axe1H] = Enum.ItemWeaponSubclass.Axe1H,
+            [Enum.ItemWeaponSubclass.Axe2H] = Enum.ItemWeaponSubclass.Axe2H,
+            [Enum.ItemWeaponSubclass.Mace1H] = Enum.ItemWeaponSubclass.Mace1H,
+            [Enum.ItemWeaponSubclass.Mace2H] = Enum.ItemWeaponSubclass.Mace2H,
+            [Enum.ItemWeaponSubclass.Sword1H] = Enum.ItemWeaponSubclass.Sword1H,
+            [Enum.ItemWeaponSubclass.Sword2H] = Enum.ItemWeaponSubclass.Sword2H,
+            [Enum.ItemWeaponSubclass.Staff] = Enum.ItemWeaponSubclass.Staff,
+            [Enum.ItemWeaponSubclass.Polearm] = Enum.ItemWeaponSubclass.Polearm,
+            [Enum.ItemWeaponSubclass.Bow] = Enum.ItemWeaponSubclass.Bow,
+            [Enum.ItemWeaponSubclass.Crossbow] = Enum.ItemWeaponSubclass.Crossbow,
+            [Enum.ItemWeaponSubclass.Gun] = Enum.ItemWeaponSubclass.Gun,
+            [Enum.ItemWeaponSubclass.Dagger] = Enum.ItemWeaponSubclass.Dagger,
+            [Enum.ItemWeaponSubclass.Unarmed] = Enum.ItemWeaponSubclass.Unarmed,
+            [Enum.ItemWeaponSubclass.Wand] = Enum.ItemWeaponSubclass.Wand
+        })[itemSubTypeID]
     end
     return key and TransmogMailerDB.mappings[key]
 end
@@ -56,7 +57,8 @@ local function ProcessBagItems()
         return
     end
 
-    local currentPlayer = UnitName("player")
+    local currentPlayer = UnitName("player"):lower()
+    local itemsToMail = {}
     for bag = 0, NUM_BAG_SLOTS do
         for slot = 1, GetContainerNumSlots(bag) do
             local itemLink = GetContainerItemLink(bag, slot)
@@ -64,21 +66,44 @@ local function ProcessBagItems()
                 local itemType, itemSubTypeID = select(6, GetItemInfo(itemLink))
                 if (itemType == LE_ITEM_CLASS_ARMOR or itemType == LE_ITEM_CLASS_WEAPON) and IsItemEligible(itemLink) then
                     local recipient = GetRecipient(itemType, itemSubTypeID)
-                    if recipient and recipient ~= "" and recipient:lower() ~= currentPlayer:lower() then
-                        -- Open mail frame if not already open
-                        if not MailFrame:IsShown() then
-                            MailFrame:Show()
-                            MailFrameTab2:Click()
+                    if recipient and recipient ~= "" then
+                        if recipient:lower() == currentPlayer then
+                            print("TransmogMailer: Skipped " .. itemLink .. " (recipient is current character)")
+                        else
+                            table.insert(itemsToMail, {bag = bag, slot = slot, itemLink = itemLink, recipient = recipient})
                         end
-                        -- Mail the item
-                        UseContainerItem(bag, slot)
-                        SendMail(recipient, "Transmog Item", "")
-                        print("TransmogMailer: Mailed " .. itemLink .. " to " .. recipient)
                     end
                 end
             end
         end
     end
+
+    if #itemsToMail == 0 then
+        print("TransmogMailer: No eligible items to mail.")
+        return
+    end
+
+    -- Open mail frame if not already open
+    if not MailFrame:IsShown() then
+        MailFrame:Show()
+        MailFrameTab2:Click()
+    end
+
+    -- Mail items with a slight delay to avoid throttling
+    local index = 1
+    local function MailNextItem()
+        if index > #itemsToMail then
+            print("TransmogMailer: Finished mailing items.")
+            return
+        end
+        local item = itemsToMail[index]
+        UseContainerItem(item.bag, item.slot)
+        SendMail(item.recipient, "Transmog Item", "")
+        print("TransmogMailer: Mailed " .. item.itemLink .. " to " .. item.recipient)
+        index = index + 1
+        C_Timer.After(0.5, MailNextItem)
+    end
+    MailNextItem()
 end
 
 -- Slash commands
@@ -87,6 +112,6 @@ SlashCmdList["TRANSMOGMAILER"] = function(msg)
     if msg == "scan" then
         ProcessBagItems()
     else
-        InterfaceOptionsFrame_OpenToCategory("TransmogMailer")
+        InterfaceOptionsFrame_OpenToCategory(TransmogMailer.optionsFrame)
     end
 end
