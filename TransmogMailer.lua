@@ -1,8 +1,32 @@
 -- TransmogMailer.lua
 TransmogMailer = TransmogMailer or {}
-TransmogMailerDB = TransmogMailerDB or { modifier = "SHIFT", mappings = {} }
+TransmogMailerDB = TransmogMailerDB or { modifier = "SHIFT", mappings = {}, characters = {} }
 
 local frame = CreateFrame("Frame")
+
+-- Track character on login
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_LOGIN" then
+        local charName = UnitName("player")
+        local _, class = UnitClass("player")
+        if charName and class then
+            -- Ensure characters table exists
+            TransmogMailerDB.characters = TransmogMailerDB.characters or {}
+            local found = false
+            for _, char in ipairs(TransmogMailerDB.characters) do
+                if char.name == charName then
+                    char.class = class -- Update class if changed
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                table.insert(TransmogMailerDB.characters, { name = charName, class = class })
+            end
+        end
+    end
+end)
 
 -- Check if an item is BoE and its transmog status
 local function IsItemEligible(itemLink)
@@ -112,6 +136,6 @@ SlashCmdList["TRANSMOGMAILER"] = function(msg)
     if msg == "scan" then
         ProcessBagItems()
     else
-        InterfaceOptionsFrame_OpenToCategory(TransmogMailer.optionsFrame)
+        Settings.OpenToCategory(TransmogMailer.categoryID)
     end
 end

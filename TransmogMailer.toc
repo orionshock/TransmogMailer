@@ -3,7 +3,7 @@
 ##Notes: Automatically mails BoE armor and weapons from the mailbox to alts based on armor/weapon type for transmog collection.
 ##Author: Orionshock, Grok.com
 ##Version: 1.1
-##SavedVariables: TransmogMailerDB
+# ##SavedVariables: TransmogMailerDB
 ##Dependencies: CanIMogIt
 
 TransmogMailer.lua 

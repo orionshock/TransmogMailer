@@ -1,125 +1,160 @@
 -- Options.lua
 local addonName = "TransmogMailer"
-TransmogMailer.optionsFrame = CreateFrame("Frame", addonName .. "Options")
-TransmogMailer.optionsFrame.name = addonName
 
--- Initialize the options UI
-TransmogMailer.optionsFrame:SetScript("OnShow", function(self)
-    local title = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 10, -10)
-    title:SetText("TransmogMailer Options")
+-- Class equip restrictions for Cataclysm Classic
+local classEquipRestrictions = {
+    -- Armor
+    [Enum.ItemArmorSubclass.Cloth] = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "HUNTER", "PALADIN", "ROGUE", "SHAMAN", "WARRIOR", "DEATHKNIGHT" },
+    [Enum.ItemArmorSubclass.Leather] = { "DRUID", "HUNTER", "ROGUE", "SHAMAN", "WARRIOR", "DEATHKNIGHT", "PALADIN" },
+    [Enum.ItemArmorSubclass.Mail] = { "HUNTER", "SHAMAN", "WARRIOR", "PALADIN", "DEATHKNIGHT" },
+    [Enum.ItemArmorSubclass.Plate] = { "WARRIOR", "PALADIN", "DEATHKNIGHT" },
+    -- Weapons
+    [Enum.ItemWeaponSubclass.Axe1H] = { "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Axe2H] = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Mace1H] = { "WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Mace2H] = { "WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Sword1H] = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK" },
+    [Enum.ItemWeaponSubclass.Sword2H] = { "WARRIOR", "PALADIN", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Staff] = { "DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR" },
+    [Enum.ItemWeaponSubclass.Polearm] = { "WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT" },
+    [Enum.ItemWeaponSubclass.Bow] = { "HUNTER", "WARRIOR", "ROGUE" },
+    [Enum.ItemWeaponSubclass.Crossbow] = { "HUNTER", "WARRIOR", "ROGUE" },
+    [Enum.ItemWeaponSubclass.Gun] = { "HUNTER", "WARRIOR", "ROGUE" },
+    [Enum.ItemWeaponSubclass.Dagger] = { "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR" },
+    [Enum.ItemWeaponSubclass.Unarmed] = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID" },
+    [Enum.ItemWeaponSubclass.Wand] = { "MAGE", "PRIEST", "WARLOCK" }
+}
 
-    -- Modifier key button and menu
-    local modifierLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    modifierLabel:SetPoint("TOPLEFT", 10, -40)
-    modifierLabel:SetText("Modifier Key:")
+-- Armor and weapon types
+local armorTypes = {
+    {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth"},
+    {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather"},
+    {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail"},
+    {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate"}
+}
 
-    local modifierButton = CreateFrame("Button", addonName .. "ModifierButton", self, "UIPanelButtonTemplate")
-    modifierButton:SetPoint("TOPLEFT", 120, -35)
-    modifierButton:SetSize(100, 22)
-    modifierButton:SetText(TransmogMailerDB.modifier or "SHIFT")
+local weaponTypes = {
+    {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe"},
+    {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe"},
+    {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace"},
+    {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace"},
+    {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword"},
+    {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword"},
+    {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff"},
+    {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm"},
+    {key = Enum.ItemWeaponSubclass.Bow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bow) or "Bow"},
+    {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow"},
+    {key = Enum.ItemWeaponSubclass.Gun, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Gun) or "Gun"},
+    {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger"},
+    {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon"},
+    {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand"}
+}
 
-    local modifierMenu = CreateFrame("Frame", addonName .. "ModifierMenu", self, "MenuFrameTemplate")
-    modifierMenu:SetPoint("TOPLEFT", modifierButton, "BOTTOMLEFT", 0, 0)
-    modifierMenu:Hide()
+-- Initialize the settings panel
+local function InitializeSettings()
+    local category, layout = Settings.RegisterCanvasLayoutCategory(CreateFrame("Frame", addonName .. "Options"), addonName)
+    Settings.RegisterAddOnCategory(category)
+    TransmogMailer.categoryID = category:GetID()
 
-    local function UpdateModifierButton(modifier)
-        TransmogMailerDB.modifier = modifier
-        modifierButton:SetText(modifier)
-    end
+    -- Title and subtitle
+    layout:AddInitializer(function(canvas)
+        local title = canvas:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        title:SetPoint("TOPLEFT", 16, -16)
+        title:SetText("TransmogMailer Options")
 
-    -- Define menu options
-    local modifierOptions = {
-        { text = "SHIFT", func = function() UpdateModifierButton("SHIFT") end },
-        { text = "CTRL", func = function() UpdateModifierButton("CTRL") end },
-        { text = "ALT", func = function() UpdateModifierButton("ALT") end },
-    }
-
-    -- Populate the menu
-    for _, option in ipairs(modifierOptions) do
-        Menu.ModifyMenu("MENU_" .. addonName .. "ModifierMenu", function(owner, rootDescription)
-            rootDescription:CreateButton(option.text, option.func)
-        end)
-    end
-
-    modifierButton:SetScript("OnClick", function()
-        Menu.OpenMenu(modifierMenu, modifierButton)
+        local subtitle = canvas:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        subtitle:SetPoint("TOPLEFT", 16, -40)
+        subtitle:SetText("Configure modifier key and recipients for transmog mailing.")
     end)
 
-    -- Armor class mappings
-    local armorTypes = {
-        {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth"},
-        {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather"},
-        {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail"},
-        {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate"}
-    }
+    -- Modifier key dropdown
+    local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.DefaultVarLocation, Settings.VarType.String, "Modifier Key", "SHIFT")
+    layout:AddInitializer(function(canvas, width, offset)
+        local initializer = Settings.CreateDropDown(category, modifierSetting, function()
+            return {
+                { text = "Shift", value = "SHIFT" },
+                { text = "Ctrl", value = "CTRL" },
+                { text = "Alt", value = "ALT" }
+            }
+        end, "Modifier Key")
+        initializer:SetPoint("TOPLEFT", 16, offset - 80)
+        return initializer:GetHeight() + 16
+    end)
 
-    -- Weapon type mappings
-    local weaponTypes = {
-        {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe"},
-        {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe"},
-        {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace"},
-        {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace"},
-        {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword"},
-        {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword"},
-        {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff"},
-        {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm"},
-        {key = Enum.ItemWeaponSubclass.Bow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bow) or "Bow"},
-        {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow"},
-        {key = Enum.ItemWeaponSubclass.Gun, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Gun) or "Gun"},
-        {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger"},
-        {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon"},
-        {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand"}
-    }
-
-    local yOffset = -80
     -- Armor mappings
+    layout:AddInitializer(function(canvas)
+        local header = canvas:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
+        header:SetPoint("TOPLEFT", 16, -140)
+        header:SetText("Armor Recipients")
+    end)
+
     for _, armor in ipairs(armorTypes) do
-        local label = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        label:SetPoint("TOPLEFT", 10, yOffset)
-        label:SetText(armor.label .. " Recipient:")
-
-        local editBox = CreateFrame("EditBox", addonName .. armor.key .. "EditBox", self, "InputBoxTemplate")
-        editBox:SetPoint("TOPLEFT", 120, yOffset)
-        editBox:SetSize(150, 20)
-        editBox:SetText(TransmogMailerDB.mappings[armor.key] or "")
-        editBox:SetScript("OnEnterPressed", function(self)
-            TransmogMailerDB.mappings[armor.key] = self:GetText()
+        local setting = Settings.RegisterProxySetting(category, "mapping_" .. armor.key, Settings.DefaultVarLocation, Settings.VarType.String, armor.label .. " Recipient", "")
+        layout:AddInitializer(function(canvas, width, offset)
+            local initializer = Settings.CreateDropDown(category, setting, function()
+                local options = { { text = "None", value = "" } }
+                for _, char in ipairs(TransmogMailerDB.characters or {}) do
+                    if tContains(classEquipRestrictions[armor.key], char.class) then
+                        table.insert(options, { text = char.name, value = char.name })
+                    end
+                end
+                return options
+            end, armor.label)
+            initializer:SetPoint("TOPLEFT", 16, offset)
+            return initializer:GetHeight() + 8
         end)
-        editBox:SetScript("OnEditFocusLost", function(self)
-            TransmogMailerDB.mappings[armor.key] = self:GetText()
+        -- Sync setting to TransmogMailerDB.mappings
+        setting:OnValueChanged(function(value)
+            TransmogMailerDB.mappings[armor.key] = value
         end)
-
-        yOffset = yOffset - 30
+        -- Initialize from saved value
+        if TransmogMailerDB.mappings[armor.key] then
+            setting:SetValue(TransmogMailerDB.mappings[armor.key])
+        end
     end
 
     -- Weapon mappings
-    yOffset = yOffset - 20 -- Add some spacing
-    local weaponTitle = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    weaponTitle:SetPoint("TOPLEFT", 10, yOffset)
-    weaponTitle:SetText("Weapon Recipients")
-    yOffset = yOffset - 30
+    layout:AddInitializer(function(canvas)
+        local header = canvas:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
+        header:SetPoint("TOPLEFT", 16, -260)
+        header:SetText("Weapon Recipients")
+    end)
 
     for _, weapon in ipairs(weaponTypes) do
-        local label = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        label:SetPoint("TOPLEFT", 10, yOffset)
-        label:SetText(weapon.label .. " Recipient:")
-
-        local editBox = CreateFrame("EditBox", addonName .. weapon.key .. "EditBox", self, "InputBoxTemplate")
-        editBox:SetPoint("TOPLEFT", 120, yOffset)
-        editBox:SetSize(150, 20)
-        editBox:SetText(TransmogMailerDB.mappings[weapon.key] or "")
-        editBox:SetScript("OnEnterPressed", function(self)
-            TransmogMailerDB.mappings[weapon.key] = self:GetText()
+        local setting = Settings.RegisterProxySetting(category, "mapping_" .. weapon.key, Settings.DefaultVarLocation, Settings.VarType.String, weapon.label .. " Recipient", "")
+        layout:AddInitializer(function(canvas, width, offset)
+            local initializer = Settings.CreateDropDown(category, setting, function()
+                local options = { { text = "None", value = "" } }
+                for _, char in ipairs(TransmogMailerDB.characters or {}) do
+                    if tContains(classEquipRestrictions[weapon.key], char.class) then
+                        table.insert(options, { text = char.name, value = char.name })
+                    end
+                end
+                return options
+            end, weapon.label)
+            initializer:SetPoint("TOPLEFT", 16, offset)
+            return initializer:GetHeight() + 8
         end)
-        editBox:SetScript("OnEditFocusLost", function(self)
-            TransmogMailerDB.mappings[weapon.key] = self:GetText()
+        -- Sync setting to TransmogMailerDB.mappings
+        setting:OnValueChanged(function(value)
+            TransmogMailerDB.mappings[weapon.key] = value
         end)
+        -- Initialize from saved value
+        if TransmogMailerDB.mappings[weapon.key] then
+            setting:SetValue(TransmogMailerDB.mappings[weapon.key])
+        end
+    end
+end
 
-        yOffset = yOffset - 30
+-- Initialize settings on load
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == addonName then
+        -- Ensure saved variables are initialized
+        TransmogMailerDB.mappings = TransmogMailerDB.mappings or {}
+        TransmogMailerDB.characters = TransmogMailerDB.characters or {}
+        InitializeSettings()
+        self:UnregisterEvent("ADDON_LOADED")
     end
 end)
-
--- Register the options panel
-local category = Settings.RegisterCanvasLayoutCategory(TransmogMailer.optionsFrame, addonName)
-Settings.RegisterAddOnCategory(category)
