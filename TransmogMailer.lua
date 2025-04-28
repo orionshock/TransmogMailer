@@ -3,6 +3,31 @@ local addonName, addon = ...
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
+-- Armor and weapon types (shared with Options.lua)
+addon.armorTypes = {
+    {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}},
+    {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = {"DRUID", "ROGUE"}},
+    {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail", equipClasses = {"HUNTER", "SHAMAN"}},
+    {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}}
+}
+
+addon.weaponTypes = {
+    {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK"}},
+    {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff", equipClasses = {"DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR"}},
+    {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT"}},
+    {key = Enum.ItemWeaponSubclass.Bows, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows) or "Bows", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
+    {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
+    {key = Enum.ItemWeaponSubclass.Guns, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns) or "Guns", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
+    {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger", equipClasses = {"HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR"}},
+    {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon", equipClasses = {"WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID"}},
+    {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}}
+}
+
 -- Tooltip scanner for binding check
 local tooltipFrame = CreateFrame("GameTooltip", "TransmogMailerTooltip", UIParent)
 local tooltipLeftLines = {}
@@ -62,6 +87,14 @@ function addon:InitSV()
         self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
         self.db.characters[currentRealm][currentFaction][name] = class:upper()
         
+        -- Initialize mappings with "_none" for all armor and weapon types
+        for _, armor in ipairs(self.armorTypes) do
+            self.db.mappings["armor_" .. armor.key] = self.db.mappings["armor_" .. armor.key] or "_none"
+        end
+        for _, weapon in ipairs(self.weaponTypes) do
+            self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
+        end
+        
         frame:UnregisterEvent("PLAYER_LOGIN")
     end
 end
@@ -81,7 +114,8 @@ function frame:BuildMailingList()
                 local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
                 
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
-                    local recipient = addon.db.mappings[itemSubClass]
+                    local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
+                    local recipient = addon.db.mappings[prefix .. itemSubClass]
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
                         if CanIMogIt and CanIMogIt:IsValidAppearanceForCharacter(itemLink, recipient) then
                             itemsToMail[recipient] = itemsToMail[recipient] or {}

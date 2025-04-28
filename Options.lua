@@ -1,31 +1,5 @@
 local addonName, addon = ...
 
--- Armor types with class restrictions for Cataclysm Classic
-local armorTypes = {
-    {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}},
-    {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = {"DRUID", "ROGUE"}},
-    {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail", equipClasses = {"HUNTER", "SHAMAN"}},
-    {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}}
-}
-
--- Weapon types with class restrictions for Cataclysm Classic
-local weaponTypes = {
-    {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK"}},
-    {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff", equipClasses = {"DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR"}},
-    {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Bows, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows) or "Bows", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Guns, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns) or "Guns", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger", equipClasses = {"HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR"}},
-    {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon", equipClasses = {"WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID"}},
-    {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}}
-}
-
 -- Initialize the settings panel
 function addon.InitializeSettings()
     local category, layout = Settings.RegisterVerticalLayoutCategory(addonName)
@@ -51,7 +25,7 @@ function addon.InitializeSettings()
 
     -- Armor mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
-    for _, armor in ipairs(armorTypes) do
+    for _, armor in ipairs(addon.armorTypes) do
         local function GetArmorOptions()
             local container = Settings.CreateControlTextContainer()
             container:Add("_none", "None", "No recipient selected")
@@ -73,10 +47,10 @@ function addon.InitializeSettings()
         
         local setting = Settings.RegisterProxySetting(category, "armor_" .. armor.key, Settings.VarType.String, armor.label .. " Recipient", "_none",
             function() 
-                local value = addon.db.mappings[armor.key]
+                local value = addon.db.mappings["armor_" .. armor.key]
                 return (value == nil or value == "") and "_none" or value 
             end,
-            function(value) addon.db.mappings[armor.key] = value end
+            function(value) addon.db.mappings["armor_" .. armor.key] = value end
         )
         local initializer = Settings.CreateDropdown(category, setting, GetArmorOptions, "Select the character to receive " .. armor.label .. " items")
         initializer.reinitializeOnValueChanged = true
@@ -84,7 +58,7 @@ function addon.InitializeSettings()
 
     -- Weapon mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
-    for _, weapon in ipairs(weaponTypes) do
+    for _, weapon in ipairs(addon.weaponTypes) do
         local function GetWeaponOptions()
             local container = Settings.CreateControlTextContainer()
             container:Add("_none", "None", "No recipient selected")
@@ -106,10 +80,10 @@ function addon.InitializeSettings()
         
         local setting = Settings.RegisterProxySetting(category, "weapon_" .. weapon.key, Settings.VarType.String, weapon.label .. " Recipient", "_none",
             function() 
-                local value = addon.db.mappings[weapon.key]
+                local value = addon.db.mappings["weapon_" .. weapon.key]
                 return (value == nil or value == "") and "_none" or value 
             end,
-            function(value) addon.db.mappings[weapon.key] = value end
+            function(value) addon.db.mappings["weapon_" .. weapon.key] = value end
         )
         local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, "Select the character to receive " .. weapon.label .. " items")
         initializer.reinitializeOnValueChanged = true
