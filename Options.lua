@@ -1,5 +1,7 @@
 -- Options.lua
-local addonName = "TransmogMailer"
+local addonName, addon = ...
+
+addon.db = TransmogMailerDB or { modifier = "SHIFT", mappings = {}, characters = {} }
 
 -- Class equip restrictions for Cataclysm Classic
 local classEquipRestrictions = {
@@ -51,10 +53,10 @@ local weaponTypes = {
 }
 
 -- Initialize the settings panel
-local function InitializeSettings()
+function addon.InitializeSettings()
     local category, layout = Settings.RegisterVerticalLayoutCategory(addonName)
     Settings.RegisterAddOnCategory(category)
-    TransmogMailer.categoryID = category:GetID()
+    addon.categoryID = category:GetID()
 
     -- Modifier key dropdown
     local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.DefaultVarLocation, Settings.VarType.String, "Modifier Key", "SHIFT")
@@ -74,20 +76,20 @@ local function InitializeSettings()
             local options = { { text = "None", value = "" } }
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
-            for _, char in ipairs(TransmogMailerDB.characters or {}) do
+            for _, char in ipairs(addon.db.characters or {}) do
                 if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[armor.key], char.class) then
                     table.insert(options, { text = char.name, value = char.name })
                 end
             end
             return options
         end, armor.label))
-        -- Sync setting to TransmogMailerDB.mappings
+        -- Sync setting to addon.db.mappings
         setting:OnValueChanged(function(value)
-            TransmogMailerDB.mappings[armor.key] = value
+            addon.db.mappings[armor.key] = value
         end)
         -- Initialize from saved value
-        if TransmogMailerDB.mappings[armor.key] then
-            setting:SetValue(TransmogMailerDB.mappings[armor.key])
+        if addon.db.mappings[armor.key] then
+            setting:SetValue(addon.db.mappings[armor.key])
         end
     end
 
@@ -99,20 +101,20 @@ local function InitializeSettings()
             local options = { { text = "None", value = "" } }
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
-            for _, char in ipairs(TransmogMailerDB.characters or {}) do
+            for _, char in ipairs(addon.db.characters or {}) do
                 if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[weapon.key], char.class) then
                     table.insert(options, { text = char.name, value = char.name })
                 end
             end
             return options
         end, weapon.label))
-        -- Sync setting to TransmogMailerDB.mappings
+        -- Sync setting to addon.db.mappings
         setting:OnValueChanged(function(value)
-            TransmogMailerDB.mappings[weapon.key] = value
+            addon.db.mappings[weapon.key] = value
         end)
         -- Initialize from saved value
-        if TransmogMailerDB.mappings[weapon.key] then
-            setting:SetValue(TransmogMailerDB.mappings[weapon.key])
+        if addon.db.mappings[weapon.key] then
+            setting:SetValue(addon.db.mappings[weapon.key])
         end
     end
 end
@@ -123,9 +125,9 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
         -- Ensure saved variables are initialized
-        TransmogMailerDB.mappings = TransmogMailerDB.mappings or {}
-        TransmogMailerDB.characters = TransmogMailerDB.characters or {}
-        InitializeSettings()
+        addon.db.mappings = addon.db.mappings or {}
+        addon.db.characters = addon.db.characters or {}
+        addon.InitializeSettings()
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)

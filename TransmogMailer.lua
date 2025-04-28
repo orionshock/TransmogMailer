@@ -1,6 +1,7 @@
 -- TransmogMailer.lua
-TransmogMailer = TransmogMailer or {}
-TransmogMailerDB = TransmogMailerDB or { modifier = "SHIFT", mappings = {}, characters = {} }
+local addonName, addon = ...
+
+addon.db = TransmogMailerDB or { modifier = "SHIFT", mappings = {}, characters = {} }
 
 local frame = CreateFrame("Frame")
 
@@ -14,9 +15,9 @@ frame:SetScript("OnEvent", function(self, event)
         local faction = UnitFactionGroup("player")
         if charName and class and realm and faction then
             -- Ensure characters table exists
-            TransmogMailerDB.characters = TransmogMailerDB.characters or {}
+            addon.db.characters = addon.db.characters or {}
             local found = false
-            for _, char in ipairs(TransmogMailerDB.characters) do
+            for _, char in ipairs(addon.db.characters) do
                 if char.name == charName and char.realm == realm then
                     char.class = class -- Update class if changed
                     char.faction = faction -- Update faction if changed
@@ -25,13 +26,13 @@ frame:SetScript("OnEvent", function(self, event)
                 end
             end
             if not found then
-                table.insert(TransmogMailerDB.characters, { name = charName, class = class, realm = realm, faction = faction })
+                table.insert(addon.db.characters, { name = charName, class = class, realm = realm, faction = faction })
             end
         end
     elseif event == "MAIL_SHOW" then
-        local modifier = TransmogMailerDB.modifier or "SHIFT"
+        local modifier = addon.db.modifier or "SHIFT"
         if IsModifierKeyDown(modifier) then
-            ProcessBagItems()
+            addon.ProcessBagItems()
         end
     end
 end)
@@ -40,7 +41,7 @@ end)
 frame:RegisterEvent("MAIL_SHOW")
 
 -- Check if an item is BoE and its transmog status
-local function IsItemEligible(itemLink)
+function addon.IsItemEligible(itemLink)
     if not itemLink or not CanIMogIt then
         return false
     end
@@ -54,7 +55,7 @@ local function IsItemEligible(itemLink)
 end
 
 -- Get the recipient for an armor or weapon type
-local function GetRecipient(itemType, itemSubTypeID)
+function addon.GetRecipient(itemType, itemSubTypeID)
     local key
     if itemType == LE_ITEM_CLASS_ARMOR then
         key = ({
@@ -81,12 +82,12 @@ local function GetRecipient(itemType, itemSubTypeID)
             [Enum.ItemWeaponSubclass.Wand] = Enum.ItemWeaponSubclass.Wand
         })[itemSubTypeID]
     end
-    return key and TransmogMailerDB.mappings[key]
+    return key and addon.db.mappings[key]
 end
 
 -- Process items in bags
-local function ProcessBagItems()
-    local modifier = TransmogMailerDB.modifier or "SHIFT"
+function addon.ProcessBagItems()
+    local modifier = addon.db.modifier or "SHIFT"
     if not IsModifierKeyDown(modifier) then
         print("TransmogMailer: Hold the modifier key (" .. modifier .. ") to scan bags.")
         return
@@ -99,8 +100,8 @@ local function ProcessBagItems()
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
             if itemLink then
                 local itemType, itemSubTypeID = select(6, GetItemInfo(itemLink))
-                if (itemType == LE_ITEM_CLASS_ARMOR or itemType == LE_ITEM_CLASS_WEAPON) and IsItemEligible(itemLink) then
-                    local recipient = GetRecipient(itemType, itemSubTypeID)
+                if (itemType == LE_ITEM_CLASS_ARMOR or itemType == LE_ITEM_CLASS_WEAPON) and addon.IsItemEligible(itemLink) then
+                    local recipient = addon.GetRecipient(itemType, itemSubTypeID)
                     if recipient and recipient ~= "" then
                         if recipient:lower() == currentPlayer then
                             print("TransmogMailer: Skipped " .. itemLink .. " (recipient is current character)")
@@ -153,8 +154,8 @@ end
 SLASH_TRANSMOGMAILER1 = "/transmogmailer"
 SlashCmdList["TRANSMOGMAILER"] = function(msg)
     if msg == "scan" then
-        ProcessBagItems()
+        addon.ProcessBagItems()
     else
-        Settings.OpenToCategory(TransmogMailer.categoryID)
+        Settings.OpenToCategory(addon.categoryID)
     end
 end
