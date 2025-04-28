@@ -66,35 +66,44 @@ frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
 
-
 local function IsItemBoE(itemLink, bag, slot)
     return CanIMogIt:IsItemBindOnEquip(itemLink, bag, slot)
 end
 
 -- Check if a recipient can learn a transmog appearance
 function addon:CanLearnAppearance(itemLink, recipient)
+    print("[TransmogMailer][Debug] CanLearnAppearance called for item: " .. (itemLink or "nil") .. ", recipient: " .. (recipient or "nil"))
     local currentRealm = GetNormalizedRealmName()
     local currentFaction = UnitFactionGroup("player")
     local recipientClass = self.db.characters[currentRealm][currentFaction][recipient]
     if not recipientClass then
-        print("[TransmogMailer] Error: No class found for recipient " .. recipient)
+        print("[TransmogMailer][Debug] Error: No class found for recipient " .. (recipient or "nil"))
+        return false
+    end
+    print("[TransmogMailer][Debug] Recipient class: " .. recipientClass)
+
+    -- Check if CanIMogIt is loaded
+    if not CanIMogIt then
+        print("[TransmogMailer][Debug] Error: CanIMogIt not loaded")
         return false
     end
 
     -- Check if the item is transmogable
     if not CanIMogIt:IsTransmogable(itemLink) then
-        print("[TransmogMailer] Item is not transmogable: " .. itemLink)
+        print("[TransmogMailer][Debug] Item is not transmogable: " .. itemLink)
         return false
     end
+    print("[TransmogMailer][Debug] Item is transmogable")
 
     -- Get item information
     local itemID = CanIMogIt:GetItemID(itemLink)
     local itemClass, itemSubClass, slotName = CanIMogIt:GetItemClassName(itemLink),
         CanIMogIt:GetItemSubClassName(itemLink), CanIMogIt:GetItemSlotName(itemLink)
     if not itemClass or not itemSubClass or not slotName then
-        print("[TransmogMailer] Error: Invalid item info for " .. itemLink)
+        print("[TransmogMailer][Debug] Error: Invalid item info - Class: " .. (itemClass or "nil") .. ", SubClass: " .. (itemSubClass or "nil") .. ", Slot: " .. (slotName or "nil"))
         return false
     end
+    print("[TransmogMailer][Debug] Item info - Class: " .. itemClass .. ", SubClass: " .. itemSubClass .. ", Slot: " .. slotName)
 
     -- Check class restrictions from CanIMogIt
     local classRestrictions = CanIMogIt:GetItemClassRestrictions(itemLink)
@@ -107,24 +116,39 @@ function addon:CanLearnAppearance(itemLink, recipient)
             end
         end
         if not canEquip then
-            print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") is not allowed to equip " .. itemLink)
+            print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") not allowed to equip " .. itemLink)
             return false
         end
+        print("[TransmogMailer][Debug] Class restrictions passed")
+    else
+        print("[TransmogMailer][Debug] No class restrictions")
     end
 
     -- Check if the item is armor or weapon
     local isArmor = CanIMogIt:IsItemArmor(itemLink)
+    print("[TransmogMailer][Debug] IsArmor: " .. tostring(isArmor))
     if isArmor then
         -- For armor, check if it matches the recipient's primary armor type
-        local recipientArmorTypeID = CanIMogIt.classArmorTypeMap[recipientClass]
-        local recipientArmorType = select(1, GetItemSubClassInfo(4, recipientArmorTypeID))
-        local isCosmetic = CanIMogIt:IsArmorCosmetic(itemLink)
-        if not isCosmetic and itemSubClass ~= recipientArmorType then
-            print("[TransmogMailer] " ..
-            recipient ..
-            " (" .. recipientClass .. ") cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
+        local recipientArmorType = nil
+        for _, armorType in ipairs(self.armorTypes) do
+            if tContains(armorType.equipClasses, recipientClass) then
+                recipientArmorType = armorType.label
+                break
+            end
+        end
+        if not recipientArmorType then
+            print("[TransmogMailer][Debug] Error: No armor type found for class " .. recipientClass)
             return false
         end
+        print("[TransmogMailer][Debug] Recipient armor type: " .. recipientArmorType)
+
+        local isCosmetic = CanIMogIt:IsArmorCosmetic(itemLink)
+        print("[TransmogMailer][Debug] IsCosmetic: " .. tostring(isCosmetic))
+        if not isCosmetic and itemSubClass ~= recipientArmorType then
+            print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
+            return false
+        end
+        print("[TransmogMailer][Debug] Armor type check passed")
     else
         -- For weapons, check if the recipient's class can equip the weapon type
         local weaponType = nil
@@ -136,21 +160,24 @@ function addon:CanLearnAppearance(itemLink, recipient)
         end
         if weaponType then
             if not tContains(weaponType.equipClasses, recipientClass) then
-                print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") cannot equip " .. itemSubClass)
+                print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot equip " .. itemSubClass)
                 return false
             end
+            print("[TransmogMailer][Debug] Weapon type check passed")
         else
-            print("[TransmogMailer] Unknown weapon subclass: " .. itemSubClass)
+            print("[TransmogMailer][Debug] Error: Unknown weapon subclass: " .. itemSubClass)
             return false
         end
     end
 
     -- Check if the character can learn the transmog (ignoring level requirements)
-    if not CanIMogIt:CharacterCanLearnTransmog(itemLink) then
-        print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") cannot learn transmog for " .. itemLink)
-        return false
-    end
+    -- if not CanIMogIt:CharacterCanLearnTransmog(itemLink) then
+    --     print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot learn transmog for " .. itemLink)
+    --     return false
+    -- end
+    print("[TransmogMailer][Debug] Transmog learnability check passed")
 
+    print("[TransmogMailer][Debug] CanLearnAppearance returning true")
     return true
 end
 
@@ -163,16 +190,23 @@ function frame:BuildMailingList()
 
     -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
+        print("[TransmogMailer][Debug] Scanning bag: " .. bag .. ", slots: " .. C_Container.GetContainerNumSlots(bag))
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            print("[TransmogMailer][Debug] Checking bag: " .. bag .. ", slot: " .. slot)
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
+            print("[TransmogMailer][Debug] ItemLink: " .. (itemLink or "nil"))
             if itemLink and not IsBound(bag, slot) then
                 print("[TransmogMailer][Debug] Item is BoE (not bound) for bag: " .. bag .. ", slot: " .. slot)
                 local itemID = C_Container.GetContainerItemID(bag, slot)
+                print("[TransmogMailer][Debug] ItemID: " .. (itemID or "nil"))
                 local itemClass, itemSubClass = select(12, C_Item.GetItemInfo(itemID))
+                print("[TransmogMailer][Debug] GetItemInfo result - ItemClass: " .. (itemClass or "nil") .. ", ItemSubClass: " .. (itemSubClass or "nil"))
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
+                    print("[TransmogMailer][Debug] Item is Armor or Weapon, processing...")
                     local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
                     print("[TransmogMailer][Debug] Calculated prefix: " .. prefix .. ", SubClass: " .. (itemSubClass or "nil"))
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
+                    print("[TransmogMailer][Debug] Looked up recipient for " .. prefix .. (itemSubClass or "nil") .. ": " .. (recipient or "nil"))
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
                         print("[TransmogMailer][Debug] Valid recipient: " .. recipient .. ", checking CanLearnAppearance")
                         if addon:CanLearnAppearance(itemLink, recipient) then
@@ -187,7 +221,10 @@ function frame:BuildMailingList()
                         print("[TransmogMailer][Debug] Skipped recipient: " .. (recipient or "nil") .. " (invalid: _none, empty, or current player)")
                     end
                 else
+                    print("[TransmogMailer][Debug] Item is not Armor or Weapon, skipping")
                 end
+            else
+                print("[TransmogMailer][Debug] Item is bound or no itemLink, skipping bag: " .. bag .. ", slot: " .. slot)
             end
         end
     end
@@ -222,7 +259,7 @@ function frame:SetNextMail()
             if itemInfo and itemInfo.stackCount then
                 linkList = (linkList ~= "" and linkList .. ", " or "") ..
                     (itemInfo.stackCount > 1 and itemInfo.stackCount .. "x" or "") .. itemInfo.hyperlink
-                C_Container.UseContainerItem(itemLoc.bag, itemLoc.slot)
+                C_Container.PickupContainerItem(itemLoc.bag, itemLoc.slot)
                 ClickSendMailItemButton(onMailSlot)
                 self.nextMail = self.nextMail or { items = {}, recipient = recipient }
                 table.insert(self.nextMail.items, itemList[i])
