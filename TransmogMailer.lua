@@ -66,6 +66,7 @@ frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
 frame.clearingMail = false -- Flag to prevent recursive ClearSendMail
+frame.mailSentTimestamp = 0 -- Debounce MAIL_SEND_SUCCESS
 
 local function IsItemBoE(itemLink, bag, slot)
     return CanIMogIt:IsItemBindOnEquip(itemLink, bag, slot)
@@ -309,8 +310,10 @@ function addon:MAIL_SHOW(event)
 end
 
 function addon:MAIL_SEND_SUCCESS(event)
-    print("[TransmogMailer][Debug] MAIL_SEND_SUCCESS")
-    if frame.sendingMail and not frame.clearingMail then
+    local currentTime = GetTime()
+    print("[TransmogMailer][Debug] MAIL_SEND_SUCCESS at " .. currentTime)
+    if frame.sendingMail and not frame.clearingMail and (currentTime - frame.mailSentTimestamp > 0.5) then
+        frame.mailSentTimestamp = currentTime
         frame.clearingMail = true
         ClearSendMail()
         frame.clearingMail = false
