@@ -10,23 +10,34 @@ frame:SetScript("OnEvent", function(self, event)
     if event == "PLAYER_LOGIN" then
         local charName = UnitName("player")
         local _, class = UnitClass("player")
-        if charName and class then
+        local realm = GetNormalizedRealmName()
+        local faction = UnitFactionGroup("player")
+        if charName and class and realm and faction then
             -- Ensure characters table exists
             TransmogMailerDB.characters = TransmogMailerDB.characters or {}
             local found = false
             for _, char in ipairs(TransmogMailerDB.characters) do
-                if char.name == charName then
+                if char.name == charName and char.realm == realm then
                     char.class = class -- Update class if changed
+                    char.faction = faction -- Update faction if changed
                     found = true
                     break
                 end
             end
             if not found then
-                table.insert(TransmogMailerDB.characters, { name = charName, class = class })
+                table.insert(TransmogMailerDB.characters, { name = charName, class = class, realm = realm, faction = faction })
             end
+        end
+    elseif event == "MAIL_SHOW" then
+        local modifier = TransmogMailerDB.modifier or "SHIFT"
+        if IsModifierKeyDown(modifier) then
+            ProcessBagItems()
         end
     end
 end)
+
+-- Register MAIL_SHOW event
+frame:RegisterEvent("MAIL_SHOW")
 
 -- Check if an item is BoE and its transmog status
 local function IsItemEligible(itemLink)
@@ -82,7 +93,7 @@ local function ProcessBagItems()
     end
 
     local currentPlayer = UnitName("player"):lower()
-    local itemsToMail = {}
+    local itemsByRecipient = {}
     for bag = 0, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
@@ -94,7 +105,8 @@ local function ProcessBagItems()
                         if recipient:lower() == currentPlayer then
                             print("TransmogMailer: Skipped " .. itemLink .. " (recipient is current character)")
                         else
-                            table.insert(itemsToMail, {bag = bag, slot = slot, itemLink = itemLink, recipient = recipient})
+                            itemsByRecipient[recipient] = itemsByRecipient[recipient] or {}
+                            table.insert(itemsByRecipient[recipient], {bag = bag, slot = slot, itemLink = itemLink})
                         end
                     end
                 end
@@ -102,7 +114,7 @@ local function ProcessBagItems()
         end
     end
 
-    if #itemsToMail == 0 then
+    if not next(itemsByRecipient) then
         print("TransmogMailer: No eligible items to mail.")
         return
     end
@@ -113,21 +125,28 @@ local function ProcessBagItems()
         MailFrameTab2:Click()
     end
 
-    -- Mail items with a slight delay to avoid throttling
-    local index = 1
-    local function MailNextItem()
-        if index > #itemsToMail then
-            print("TransmogMailer: Finished mailing items.")
-            return
+    -- Send mails with batched items (up to 12 items per mail)
+    local MAIL_ATTACHMENT_LIMIT = 12
+    for recipient, items in pairs(itemsByRecipient) do
+        local itemCount = #items
+        for startIndex = 1, itemCount, MAIL_ATTACHMENT_LIMIT do
+            local mailItems = {}
+            for i = startIndex, math.min(startIndex + MAIL_ATTACHMENT_LIMIT - 1, itemCount) do
+                table.insert(mailItems, items[i])
+            end
+
+            -- Send mail with batched items
+            for _, item in ipairs(mailItems) do
+                C_Container.UseContainerItem(item.bag, item.slot)
+            end
+            SendMail(recipient, "Transmog Items", "")
+            print("TransmogMailer: Mailed " .. #mailItems .. " items to " .. recipient)
+            C_Timer.After(0.5, function()
+                -- Clear attachments after sending
+                ClearSendMail()
+            end)
         end
-        local item = itemsToMail[index]
-        C_Container.UseContainerItem(item.bag, item.slot)
-        SendMail(item.recipient, "Transmog Item", "")
-        print("TransmogMailer: Mailed " .. item.itemLink .. " to " .. item.recipient)
-        index = index + 1
-        C_Timer.After(0.5, MailNextItem)
     end
-    MailNextItem()
 end
 
 -- Slash commands

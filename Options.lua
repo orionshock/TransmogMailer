@@ -58,7 +58,7 @@ local function InitializeSettings()
 
     -- Modifier key dropdown
     local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.DefaultVarLocation, Settings.VarType.String, "Modifier Key", "SHIFT")
-    layout:AddInitializer(Settings.CreateDropDown(category, modifierSetting, function()
+    layout:AddInitializer(Settings.CreateDropdown(category, modifierSetting, function()
         return {
             { text = "Shift", value = "SHIFT" },
             { text = "Ctrl", value = "CTRL" },
@@ -70,10 +70,12 @@ local function InitializeSettings()
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
     for _, armor in ipairs(armorTypes) do
         local setting = Settings.RegisterProxySetting(category, "mapping_" .. armor.key, Settings.DefaultVarLocation, Settings.VarType.String, armor.label .. " Recipient", "")
-        layout:AddInitializer(Settings.CreateDropDown(category, setting, function()
+        layout:AddInitializer(Settings.CreateDropdown(category, setting, function()
             local options = { { text = "None", value = "" } }
+            local currentRealm = GetNormalizedRealmName()
+            local currentFaction = UnitFactionGroup("player")
             for _, char in ipairs(TransmogMailerDB.characters or {}) do
-                if tContains(classEquipRestrictions[armor.key], char.class) then
+                if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[armor.key], char.class) then
                     table.insert(options, { text = char.name, value = char.name })
                 end
             end
@@ -93,10 +95,12 @@ local function InitializeSettings()
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
     for _, weapon in ipairs(weaponTypes) do
         local setting = Settings.RegisterProxySetting(category, "mapping_" .. weapon.key, Settings.DefaultVarLocation, Settings.VarType.String, weapon.label .. " Recipient", "")
-        layout:AddInitializer(Settings.CreateDropDown(category, setting, function()
+        layout:AddInitializer(Settings.CreateDropdown(category, setting, function()
             local options = { { text = "None", value = "" } }
+            local currentRealm = GetNormalizedRealmName()
+            local currentFaction = UnitFactionGroup("player")
             for _, char in ipairs(TransmogMailerDB.characters or {}) do
-                if tContains(classEquipRestrictions[weapon.key], char.class) then
+                if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[weapon.key], char.class) then
                     table.insert(options, { text = char.name, value = char.name })
                 end
             end
