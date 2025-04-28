@@ -70,6 +70,7 @@ frame.sendingMail = false
 frame.clearingMail = false -- Flag to prevent recursive ClearSendMail
 frame.mailSentTimestamp = 0 -- Debounce MAIL_SEND_SUCCESS
 frame.mailSentCount = 0 -- Track processed events per session
+frame.lastMailShow = 0 -- Debounce MAIL_SHOW
 
 -- Check if a recipient can learn a transmog appearance
 function addon:CanLearnAppearance(itemLink, recipient)
@@ -183,7 +184,6 @@ function frame:BuildMailingList()
         itemCount = itemCount + #items
         recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
     end
-    print("[TransmogMailer] Built mailing list: " .. itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
 end
 
 -- Set up the next mail
@@ -255,7 +255,8 @@ frame:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 function addon:MAIL_SHOW(event)
-    print("[TransmogMailer] MAIL_SHOW event fired")
+    if GetTime() - frame.lastMailShow < 1 then return end
+    frame.lastMailShow = GetTime()
     if self.db.modifier ~= "NONE" then
         local modifier = self.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
@@ -284,7 +285,7 @@ function addon:MAIL_SEND_SUCCESS(event)
         frame.nextMail = nil
         frame:SetNextMail()
         if not frame.nextMail and not frame.mailingList then
-            self:Hide()
+            frame:Hide()
         end
     end
 end
@@ -320,7 +321,6 @@ function addon:InitSV()
     if GetNormalizedRealmName() and not self.db then
         self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
         TransmogMailerDB = self.db
-        print("[TransmogMailer] Initialized saved variables, modifier set to: " .. tostring(self.db.modifier))
 
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
@@ -347,7 +347,6 @@ end
 
 function addon:ADDON_LOADED(event, arg1)
     if arg1 == addonName then
-        print("[TransmogMailer] ADDON_LOADED for " .. addonName)
         -- Initialize saved variables
         local svLoaded = self:InitSV()
         if svLoaded then
@@ -358,7 +357,6 @@ function addon:ADDON_LOADED(event, arg1)
 end
 
 function addon:PLAYER_LOGIN(event)
-    print("[TransmogMailer] PLAYER_LOGIN, initializing saved variables")
     -- Initialize saved variables and character info
     local svLoaded = self:InitSV()
     if svLoaded then
