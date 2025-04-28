@@ -7,11 +7,116 @@ local MAIL_ATTACHMENT_LIMIT = 12
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("MAIL_SHOW")
-frame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == addonName then
+frame:RegisterEvent("MAIL_CLOSED")
+frame:RegisterEvent("MAIL_SEND_SUCCESS")
+frame:RegisterEvent("MAIL_FAILED")
+frame:Hide()
+
+frame.mailingList = nil
+frame.nextMail = nil
+frame.sendingMail = false
+
+-- Build mailing list
+function frame:BuildMailingList()
+    self.mailingList = nil
+    local itemsToMail = {}
+    local currentPlayer = UnitName("player")
+    
+    -- Collect items to mail
+    for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local itemLink = C_Container.GetContainerItemLink(bag, slot)
+            if itemLink then
+                local itemID = C_Container.GetContainerItemID(bag, slot)
+                local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
+                
+                if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
+                    local recipient = addon.db.mappings[itemSubClass]
+                    if recipient and recipient ~= "" and recipient ~= currentPlayer then
+                        if CanIMogIt and CanIMogIt:IsValidAppearanceForCharacter(itemLink, recipient) then
+                            itemsToMail[recipient] = itemsToMail[recipient] or {}
+                            table.insert(itemsToMail[recipient], {bag = bag, slot = slot})
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    self.mailingList = itemsToMail
+end
+
+-- Set up the next mail
+function frame:SetNextMail()
+    if not self.mailingList or self.nextMail then return end
+    
+    local onMailSlot = 1
+    local linkList = ""
+    for recipient, itemList in pairs(self.mailingList) do
+        for i = #itemList, 1, -1 do
+            local itemLoc = itemList[i]
+            local itemInfo = C_Container.GetContainerItemInfo(itemLoc.bag, itemLoc.slot)
+            if itemInfo and itemInfo.stackCount then
+                linkList = (linkList ~= "" and linkList .. ", " or "") ..
+                           (itemInfo.stackCount > 1 and itemInfo.stackCount .. "x" or "") .. itemInfo.hyperlink
+                C_Container.UseContainerItem(itemLoc.bag, itemLoc.slot)
+                ClickSendMailItemButton(onMailSlot)
+                self.nextMail = self.nextMail or { items = {}, recipient = recipient }
+                table.insert(self.nextMail.items, itemList[i])
+                itemList[i] = nil
+                onMailSlot = onMailSlot + 1
+                if onMailSlot > MAIL_ATTACHMENT_LIMIT then
+                    break
+                end
+            end
+        end
+        if onMailSlot > 1 then
+            -- Clean up empty recipient lists
+            if #itemList == 0 then
+                self.mailingList[recipient] = nil
+                if next(self.mailingList) == nil then
+                    self.mailingList = nil
+                end
+            end
+            DEFAULT_CHAT_FRAME:AddMessage("Sending mail to " .. recipient .. ": " .. linkList, 1, 1, 0)
+            self:Show() -- Start OnUpdate
+            return
+        end
+    end
+end
+
+-- OnUpdate for mail sending
+frame:SetScript("OnShow", function(self) self.elapsed = 0 end)
+frame:SetScript("OnUpdate", function(self, elapsed)
+    self.elapsed = self.elapsed + elapsed
+    if self.elapsed > 1 then
+        self.elapsed = 0
+        
+        if not self.nextMail then
+            self:SetNextMail()
+            if not self.nextMail then
+                self:Hide()
+            end
+            return
+        end
+        
+        if GetSendMailItem(1) then
+            SendMail(self.nextMail.recipient, "Transmog Items", "")
+        else
+            DEFAULT_CHAT_FRAME:AddMessage(
+                "TransmogMailer: No items in slots when trying to send to " .. self.nextMail.recipient, 1, 0, 0)
+            self.nextMail = nil
+            self:Hide()
+        end
+    end
+end)
+
+-- Event handlers
+function addon:ADDON_LOADED(event, arg1)
+    if arg1 == addonName then
         -- Initialize saved variables
-        addon.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
-        TransmogMailerDB = addon.db
+        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
+        TransmogMailerDB = self.db
 
         -- Store current character info
         local currentRealm = GetNormalizedRealmName()
@@ -19,61 +124,69 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         local name = UnitName("player")
         local _, class = UnitClass("player")
         
-        addon.db.characters[currentRealm] = addon.db.characters[currentRealm] or {}
-        addon.db.characters[currentRealm][currentFaction] = addon.db.characters[currentRealm][currentFaction] or {}
-        addon.db.characters[currentRealm][currentFaction][name] = class:upper()
+        self.db.characters[currentRealm] = self.db.characters[currentRealm] or {}
+        self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
+        self.db.characters[currentRealm][currentFaction][name] = class:upper()
 
         -- Initialize settings
-        addon.InitializeSettings()
-        self:UnregisterEvent("ADDON_LOADED")
-    elseif event == "MAIL_SHOW" and addon.db.modifier ~= "NONE" then
-        local modifier = addon.db.modifier
+        self.InitializeSettings()
+        frame:UnregisterEvent("ADDON_LOADED")
+    end
+end
+
+function addon:MAIL_SHOW(event)
+    if self.db.modifier ~= "NONE" then
+        local modifier = self.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
                            IsControlKeyDown() and modifier == "CTRL" or
                            IsAltKeyDown() and modifier == "ALT"
         
         if isModified then
-            local itemsToMail = {}
-            local currentPlayer = UnitName("player")
-            
-            for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
-                for slot = 1, C_Container.GetContainerNumSlots(bag) do
-                    local itemLink = C_Container.GetContainerItemLink(bag, slot)
-                    if itemLink then
-                        local itemID = C_Container.GetContainerItemID(bag, slot)
-                        local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
-                        
-                        if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
-                            local recipient = addon.db.mappings[itemSubClass]
-                            if recipient and recipient ~= "" and recipient ~= currentPlayer then
-                                if CanIMogIt and CanIMogIt:IsValidAppearanceForCharacter(itemLink, recipient) then
-                                    itemsToMail[recipient] = itemsToMail[recipient] or {}
-                                    table.insert(itemsToMail[recipient], {bag = bag, slot = slot})
-                                end
-                            end
-                        end
-                    end
+            frame.sendingMail = true
+            frame:BuildMailingList()
+            if frame.mailingList then
+                frame:SetNextMail()
+                if frame.nextMail then
+                    frame:Show()
                 end
             end
-            
-            for recipient, items in pairs(itemsToMail) do
-                local mailCount = math.ceil(#items / MAIL_ATTACHMENT_LIMIT)
-                for mailIndex = 1, mailCount do
-                    local startIndex = (mailIndex - 1) * MAIL_ATTACHMENT_LIMIT + 1
-                    local endIndex = math.min(startIndex + MAIL_ATTACHMENT_LIMIT - 1, #items)
-                    
-                    MailFrameTab_OnClick(nil, 2) -- Switch to Send Mail tab
-                    SendMailNameEditBox:SetText(recipient)
-                    
-                    for i = startIndex, endIndex do
-                        local item = items[i]
-                        C_Container.UseContainerItem(item.bag, item.slot)
-                    end
-                    
-                    SendMailMailButton:Click()
-                end
-            end
+        else
+            frame.sendingMail = false
         end
+    end
+end
+
+function addon:MAIL_SEND_SUCCESS(event)
+    if frame.sendingMail then
+        ClearSendMail()
+        frame.nextMail = nil
+        frame:SetNextMail()
+        if not frame.nextMail and not frame.mailingList then
+            frame:Hide()
+        end
+    end
+end
+
+function addon:MAIL_FAILED(event)
+    frame:Hide()
+    frame.nextMail = nil
+    frame.mailingList = nil
+    frame.sendingMail = false
+    ClearSendMail()
+end
+
+function addon:MAIL_CLOSED(event)
+    frame:Hide()
+    frame.nextMail = nil
+    frame.mailingList = nil
+    frame.sendingMail = false
+    ClearSendMail()
+end
+
+-- Dispatch events to addon methods
+frame:SetScript("OnEvent", function(frame, event, ...)
+    if type(addon[event]) == "function" then
+        addon[event](addon, event, ...)
     end
 end)
 
