@@ -3,9 +3,9 @@ local addonName, addon = ...
 -- Class equip restrictions for Cataclysm Classic
 local classEquipRestrictions = {
     -- Armor
-    [Enum.ItemArmorSubclass.Cloth] = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "HUNTER", "PALADIN", "ROGUE", "SHAMAN", "WARRIOR", "DEATHKNIGHT" },
-    [Enum.ItemArmorSubclass.Leather] = { "DRUID", "HUNTER", "ROGUE", "SHAMAN", "WARRIOR", "DEATHKNIGHT", "PALADIN" },
-    [Enum.ItemArmorSubclass.Mail] = { "HUNTER", "SHAMAN", "WARRIOR", "PALADIN", "DEATHKNIGHT" },
+    [Enum.ItemArmorSubclass.Cloth] = { "MAGE", "PRIEST", "WARLOCK" },
+    [Enum.ItemArmorSubclass.Leather] = { "DRUID", "ROGUE" },
+    [Enum.ItemArmorSubclass.Mail] = { "HUNTER", "SHAMAN" },
     [Enum.ItemArmorSubclass.Plate] = { "WARRIOR", "PALADIN", "DEATHKNIGHT" },
     -- Weapons
     [Enum.ItemWeaponSubclass.Axe1H] = { "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT" },
@@ -80,10 +80,14 @@ function addon.InitializeSettings()
             container:Add("", "None", "No recipient selected")
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
-            if addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
                 for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
-                    if tContains(classEquipRestrictions[armor.key], class) then
-                        container:Add(name, name, "Send to " .. name)
+                    if classEquipRestrictions[armor.key] and tContains(classEquipRestrictions[armor.key], class) then
+                        local displayName = name
+                        if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] and RAID_CLASS_COLORS[class].colorStr then
+                            displayName = "|c" .. RAID_CLASS_COLORS[class].colorStr .. name .. "|r"
+                        end
+                        container:Add(name, displayName, "Send to " .. name)
                     end
                 end
             end
@@ -106,10 +110,14 @@ function addon.InitializeSettings()
             container:Add("", "None", "No recipient selected")
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
-            if addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
                 for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
-                    if tContains(classEquipRestrictions[weapon.key], class) then
-                        container:Add(name, name, "Send to " .. name)
+                    if classEquipRestrictions[weapon.key] and tContains(classEquipRestrictions[weapon.key], class) then
+                        local displayName = name
+                        if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] and RAID_CLASS_COLORS[class].colorStr then
+                            displayName = "|c" .. RAID_CLASS_COLORS[class].colorStr .. name .. "|r"
+                        end
+                        container:Add(name, displayName, "Send to " .. name)
                     end
                 end
             end
