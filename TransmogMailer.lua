@@ -8,6 +8,8 @@ addon.armorTypes = {
     { key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = { "DRUID", "ROGUE" } },
     { key = Enum.ItemArmorSubclass.Mail,    label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail",       equipClasses = { "HUNTER", "SHAMAN" } },
     { key = Enum.ItemArmorSubclass.Plate,   label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate",     equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } }
+    -- Optional: Enable for Cosmetic items
+    -- { key = Enum.ItemArmorSubclass.Cosmetic, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cosmetic) or "Cosmetic", equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "ROGUE", "HUNTER", "SHAMAN", "WARRIOR", "PALADIN", "DEATHKNIGHT" } }
 }
 
 addon.weaponTypes = {
@@ -95,10 +97,8 @@ function addon:CanLearnAppearance(itemLink, recipient)
     end
 
     -- Get item information
-    local itemID = CanIMogIt:GetItemID(itemLink)
-    local itemClass, itemSubClass, slotName = CanIMogIt:GetItemClassName(itemLink),
-        CanIMogIt:GetItemSubClassName(itemLink), CanIMogIt:GetItemSlotName(itemLink)
-    if not itemClass or not itemSubClass or not slotName then
+    local _, _, _, _, _, _, _, _, _, _, _, itemClass, itemSubClass = C_Item.GetItemInfo(itemLink)
+    if not itemClass or not itemSubClass then
         print("[TransmogMailer][Debug] Error: Invalid item info for " .. itemLink)
         return false
     end
@@ -150,7 +150,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
         end
         if weaponType then
             if not tContains(weaponType.equipClasses, recipientClass) then
-                print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot equip " .. itemSubClass)
+                print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot equip weapon subclass " .. itemSubClass)
                 return false
             end
         else
@@ -375,6 +375,8 @@ function addon:InitSV()
         for _, weapon in ipairs(self.weaponTypes) do
             self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
         end
+        -- Optional: Enable for Cosmetic items
+        -- self.db.mappings["armor_" .. Enum.ItemArmorSubclass.Cosmetic] = self.db.mappings["armor_" .. Enum.ItemArmorSubclass.Cosmetic] or "_none"
 
         frame:UnregisterEvent("PLAYER_LOGIN")
         return true
