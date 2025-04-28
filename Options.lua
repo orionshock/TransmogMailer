@@ -52,20 +52,6 @@ local weaponTypes = {
     {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand"}
 }
 
--- Callback for setting changes
-local function OnSettingChanged(_, setting, value)
-    local variable = setting:GetVariable()
-    if variable == "modifier" then
-        addon.db.modifier = value
-    else
-        -- Extract key from "armor_key" or "weapon_key"
-        local key = variable:match("^armor_(.+)$") or variable:match("^weapon_(.+)$")
-        if key then
-            addon.db.mappings[tonumber(key) or key] = value
-        end
-    end
-end
-
 -- Initialize the settings panel
 function addon.InitializeSettings()
     local category, layout = Settings.RegisterVerticalLayoutCategory(addonName)
@@ -82,10 +68,12 @@ function addon.InitializeSettings()
         return container:GetData()
     end
     
-    local modifierSetting = Settings.RegisterAddOnSetting(category, "Modifier Key", "modifier", Settings.VarType.String, "NONE")
+    local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.VarType.String, "Modifier Key", "NONE",
+        function() return addon.db.modifier end,
+        function(value) addon.db.modifier = value end
+    )
     local modifierInitializer = Settings.CreateDropdown(category, modifierSetting, GetModifierOptions, "Select the modifier key for mailing transmog items")
     modifierInitializer.reinitializeOnValueChanged = true
-    Settings.SetOnValueChangedCallback("modifier", OnSettingChanged)
 
     -- Armor mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
@@ -105,10 +93,12 @@ function addon.InitializeSettings()
             return container:GetData()
         end
         
-        local setting = Settings.RegisterAddOnSetting(category, armor.label .. " Recipient", "armor_" .. armor.key, Settings.VarType.String, "")
+        local setting = Settings.RegisterProxySetting(category, "armor_" .. armor.key, Settings.VarType.String, armor.label .. " Recipient", "",
+            function() return addon.db.mappings[armor.key] or "" end,
+            function(value) addon.db.mappings[armor.key] = value end
+        )
         local initializer = Settings.CreateDropdown(category, setting, GetArmorOptions, "Select the character to receive " .. armor.label .. " items")
         initializer.reinitializeOnValueChanged = true
-        Settings.SetOnValueChangedCallback("armor_" .. armor.key, OnSettingChanged)
     end
 
     -- Weapon mappings
@@ -129,10 +119,12 @@ function addon.InitializeSettings()
             return container:GetData()
         end
         
-        local setting = Settings.RegisterAddOnSetting(category, weapon.label .. " Recipient", "weapon_" .. weapon.key, Settings.VarType.String, "")
+        local setting = Settings.RegisterProxySetting(category, "weapon_" .. weapon.key, Settings.VarType.String, weapon.label .. " Recipient", "",
+            function() return addon.db.mappings[weapon.key] or "" end,
+            function(value) addon.db.mappings[weapon.key] = value end
+        )
         local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, "Select the character to receive " .. weapon.label .. " items")
         initializer.reinitializeOnValueChanged = true
-        Settings.SetOnValueChangedCallback("weapon_" .. weapon.key, OnSettingChanged)
     end
 end
 
