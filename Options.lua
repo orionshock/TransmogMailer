@@ -71,7 +71,7 @@ function addon.InitializeSettings()
     modifierInitializer.reinitializeOnValueChanged = true
     print("[TransmogMailer] Created modifier dropdown, default value: " .. tostring(addon.db.modifier))
 
-    -- Armor mappings
+    -- Armor mappings (including offhand and shield)
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
     for _, armor in ipairs(addon.armorTypes) do
         local function GetArmorOptions()

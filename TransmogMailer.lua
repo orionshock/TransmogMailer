@@ -4,12 +4,14 @@ local MAIL_ATTACHMENT_LIMIT = 12
 
 -- Armor and weapon types (shared with Options.lua)
 addon.armorTypes = {
-    { key = Enum.ItemArmorSubclass.Cloth,   label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth",     equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
-    { key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = { "DRUID", "ROGUE" } },
-    { key = Enum.ItemArmorSubclass.Mail,    label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail",       equipClasses = { "HUNTER", "SHAMAN" } },
-    { key = Enum.ItemArmorSubclass.Plate,   label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate",     equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } }
-    -- Optional: Enable for Cosmetic items
-    -- { key = Enum.ItemArmorSubclass.Cosmetic, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cosmetic) or "Cosmetic", equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "ROGUE", "HUNTER", "SHAMAN", "WARRIOR", "PALADIN", "DEATHKNIGHT" } }
+    { key = 1, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 1) or "Cloth",   equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
+    { key = 2, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 2) or "Leather", equipClasses = { "DRUID", "ROGUE" } },
+    { key = 3, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 3) or "Mail",    equipClasses = { "HUNTER", "SHAMAN" } },
+    { key = 4, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 4) or "Plate",   equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
+    { key = 6, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 6) or "Shield",   equipClasses = { "WARRIOR", "PALADIN", "SHAMAN" } },
+    { key = 0, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 0) or "Miscellaneous", equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "ROGUE", "HUNTER", "SHAMAN", "PALADIN", "DEATHKNIGHT", "WARRIOR" } }
+    -- Optional: Enable for Cosmetic items (e.g., tabards, shirts)
+    -- { key = 5, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 5) or "Cosmetic", equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "ROGUE", "HUNTER", "SHAMAN", "PALADIN", "DEATHKNIGHT", "WARRIOR" } }
 }
 
 addon.weaponTypes = {
@@ -69,6 +71,7 @@ frame.nextMail = nil
 frame.sendingMail = false
 frame.clearingMail = false -- Flag to prevent recursive ClearSendMail
 frame.mailSentTimestamp = 0 -- Debounce MAIL_SEND_SUCCESS
+frame.mailSentCount = 0 -- Track processed events per session
 
 local function IsItemBoE(itemLink, bag, slot)
     return CanIMogIt:IsItemBindOnEquip(itemLink, bag, slot)
@@ -120,27 +123,26 @@ function addon:CanLearnAppearance(itemLink, recipient)
     end
 
     -- Check if the item is armor or weapon
-    local isArmor = CanIMogIt:IsItemArmor(itemLink)
-    if isArmor then
-        -- For armor, check if it matches the recipient's primary armor type
-        local recipientArmorType = nil
-        for _, armorType in ipairs(self.armorTypes) do
-            if tContains(armorType.equipClasses, recipientClass) then
-                recipientArmorType = armorType.label
+    if CanIMogIt:IsItemArmor(itemLink) then
+        -- For armor, check if it matches the recipient's allowed armor type
+        local armorType = nil
+        for _, typeInfo in ipairs(self.armorTypes) do
+            if typeInfo.key == itemSubClass then
+                armorType = typeInfo
                 break
             end
         end
-        if not recipientArmorType then
-            print("[TransmogMailer][Debug] Error: No armor type found for class " .. recipientClass)
-            return false
-        end
-        local isCosmetic = CanIMogIt:IsArmorCosmetic(itemLink)
-        if not isCosmetic and itemSubClass ~= recipientArmorType then
-            print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
+        if armorType then
+            if not tContains(armorType.equipClasses, recipientClass) then
+                print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot equip armor subclass " .. itemSubClass)
+                return false
+            end
+        else
+            print("[TransmogMailer][Debug] Error: Unknown armor subclass: " .. itemSubClass)
             return false
         end
     else
-        -- For weapons, check if the recipient's class can equip the weapon type
+        -- For weapons, check if the recipient's class can equip the type
         local weaponType = nil
         for _, typeInfo in ipairs(self.weaponTypes) do
             if typeInfo.key == itemSubClass then
@@ -176,7 +178,7 @@ function frame:BuildMailingList()
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
             if itemLink and not IsBound(bag, slot) then
                 local itemID = C_Container.GetContainerItemID(bag, slot)
-                local itemClass, itemSubClass = select(12, C_Item.GetItemInfo(itemID))
+                local itemClass, itemSubClass, _, _, _, _, invType = select(12, C_Item.GetItemInfo(itemID))
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
                     local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
@@ -312,8 +314,9 @@ end
 function addon:MAIL_SEND_SUCCESS(event)
     local currentTime = GetTime()
     print("[TransmogMailer][Debug] MAIL_SEND_SUCCESS at " .. currentTime)
-    if frame.sendingMail and not frame.clearingMail and (currentTime - frame.mailSentTimestamp > 0.5) then
+    if frame.sendingMail and not frame.clearingMail and (currentTime ~= frame.mailSentTimestamp or frame.mailSentCount == 0) and (currentTime - frame.mailSentTimestamp > 0.5) then
         frame.mailSentTimestamp = currentTime
+        frame.mailSentCount = frame.mailSentCount + 1
         frame.clearingMail = true
         ClearSendMail()
         frame.clearingMail = false
@@ -323,6 +326,8 @@ function addon:MAIL_SEND_SUCCESS(event)
             print("[TransmogMailer][Debug] No more mails to send, hiding frame")
             frame:Hide()
         end
+    else
+        print("[TransmogMailer][Debug] Skipped duplicate MAIL_SEND_SUCCESS at " .. currentTime)
     end
 end
 
@@ -337,6 +342,7 @@ function addon:MAIL_FAILED(event)
     frame.nextMail = nil
     frame.mailingList = nil
     frame.sendingMail = false
+    frame.mailSentCount = 0
 end
 
 function addon:MAIL_CLOSED(event)
@@ -350,6 +356,7 @@ function addon:MAIL_CLOSED(event)
     frame.nextMail = nil
     frame.mailingList = nil
     frame.sendingMail = false
+    frame.mailSentCount = 0
 end
 
 -- Initialize saved variables and character data
@@ -375,8 +382,6 @@ function addon:InitSV()
         for _, weapon in ipairs(self.weaponTypes) do
             self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
         end
-        -- Optional: Enable for Cosmetic items
-        -- self.db.mappings["armor_" .. Enum.ItemArmorSubclass.Cosmetic] = self.db.mappings["armor_" .. Enum.ItemArmorSubclass.Cosmetic] or "_none"
 
         frame:UnregisterEvent("PLAYER_LOGIN")
         return true
