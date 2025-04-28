@@ -1,6 +1,6 @@
 -- TransmogMailer.lua
 local addonName, addon = ...
-
+_G[addonName] = addon
 local MAIL_ATTACHMENT_LIMIT = 12
 
 -- Armor and weapon types (shared with Options.lua)

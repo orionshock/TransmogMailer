@@ -34,7 +34,17 @@
             "SHIFT_KEY",
             "NONE_KEY",
             "ITEM_SOULBOUND",
-            "ITEM_BNETACCOUNTBOUND"
+            "ITEM_BNETACCOUNTBOUND",
+            "RETRIEVING_ITEM_INFO",
+            "SetItemButtonQuality",
+            "MINUTES",
+            "CONFIRM_AZERITE_EMPOWERED_RESPEC_STRING",
+            "BUYOUT_AUCTION_CONFIRMATION_STRING",
+            "OKAY",
+            "LE_EXPANSION_WRATH_OF_THE_LICH_KING",
+            "SECONDS",
+            "BONUS_OBJECTIVE_TIME_LEFT",
+            "TIME_REMAINING"
         ]
     }
 }

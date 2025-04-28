@@ -1,10 +1,51 @@
 local addonName, addon = ...
 
+-- Static popup for character deletion confirmation
+StaticPopupDialogs["TRANSMOGMAILER_CONFIRM_DELETE_CHARACTER"] = {
+    text = "Are you sure you want to delete %s from TransmogMailer? This will reset all mappings for this character to None.",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = function(self, data)
+        local characterName = data.characterName
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        
+        -- Remove character from addon.db.characters
+        if addon.db.characters and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            addon.db.characters[currentRealm][currentFaction][characterName] = nil
+        end
+        
+        -- Reset mappings that reference the deleted character to "_none"
+        for key, value in pairs(addon.db.mappings) do
+            if value == characterName then
+                addon.db.mappings[key] = "_none"
+            end
+        end
+        
+        -- Update dropdowns that reference the deleted character
+        for _, initializer in ipairs(addon.dependentInitializers) do
+            local setting = initializer:GetSetting()
+            if setting and setting:GetValue() == characterName then
+                setting:SetValue("_none")
+            end
+        end
+        
+        -- Reset the cleanup dropdown to default
+        addon.cleanupSetting:SetValue("")
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true
+}
+
 -- Initialize the settings panel
 function addon.InitializeSettings()
     local category, layout = Settings.RegisterVerticalLayoutCategory(addonName)
     Settings.RegisterAddOnCategory(category)
     addon.categoryID = category:GetID()
+    
+    -- Store dependent initializers for armor and weapon dropdowns
+    addon.dependentInitializers = {}
 
     -- Modifier key dropdown
     local function GetModifierOptions()
@@ -54,6 +95,7 @@ function addon.InitializeSettings()
         )
         local initializer = Settings.CreateDropdown(category, setting, GetArmorOptions, "Select the character to receive " .. armor.label .. " items")
         initializer.reinitializeOnValueChanged = true
+        table.insert(addon.dependentInitializers, initializer)
     end
 
     -- Weapon mappings
@@ -87,5 +129,41 @@ function addon.InitializeSettings()
         )
         local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, "Select the character to receive " .. weapon.label .. " items")
         initializer.reinitializeOnValueChanged = true
+        table.insert(addon.dependentInitializers, initializer)
     end
+
+    -- Character cleanup section
+    layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Character Cleanup"))
+    
+    local function GetCharacterOptions()
+        local container = Settings.CreateControlTextContainer()
+        container:Add("", "Select a character", "Choose a character to delete")
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
+                if name ~= UnitName("player") then
+                    local displayName = name
+                    if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] and RAID_CLASS_COLORS[class].colorStr then
+                        displayName = "|c" .. RAID_CLASS_COLORS[class].colorStr .. name .. "|r"
+                    end
+                    container:Add(name, displayName, "Delete " .. name)
+                end
+            end
+        end
+        return container:GetData()
+    end
+    
+    local cleanupSetting = Settings.RegisterProxySetting(category, "cleanup_character", Settings.VarType.String, "Character to Delete", "",
+        function() return addon.cleanupValue or "" end,
+        function(value)
+            addon.cleanupValue = value
+            if value and value ~= "" and value ~= UnitName("player") then
+                StaticPopup_Show("TRANSMOGMAILER_CONFIRM_DELETE_CHARACTER", value, nil, {characterName = value})
+            end
+        end
+    )
+    addon.cleanupSetting = cleanupSetting -- Store for access in StaticPopup OnAccept
+    local cleanupInitializer = Settings.CreateDropdown(category, cleanupSetting, GetCharacterOptions, "Select a character to delete from TransmogMailer")
+    cleanupInitializer.reinitializeOnValueChanged = true
 end
