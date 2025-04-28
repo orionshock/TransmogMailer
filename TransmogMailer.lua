@@ -62,9 +62,9 @@ local function GetRecipient(itemType, itemSubTypeID)
             [Enum.ItemWeaponSubclass.Sword2H] = Enum.ItemWeaponSubclass.Sword2H,
             [Enum.ItemWeaponSubclass.Staff] = Enum.ItemWeaponSubclass.Staff,
             [Enum.ItemWeaponSubclass.Polearm] = Enum.ItemWeaponSubclass.Polearm,
-            [Enum.ItemWeaponSubclass.Bow] = Enum.ItemWeaponSubclass.Bow,
+            [Enum.ItemWeaponSubclass.Bows] = Enum.ItemWeaponSubclass.Bows,
             [Enum.ItemWeaponSubclass.Crossbow] = Enum.ItemWeaponSubclass.Crossbow,
-            [Enum.ItemWeaponSubclass.Gun] = Enum.ItemWeaponSubclass.Gun,
+            [Enum.ItemWeaponSubclass.Guns] = Enum.ItemWeaponSubclass.Guns,
             [Enum.ItemWeaponSubclass.Dagger] = Enum.ItemWeaponSubclass.Dagger,
             [Enum.ItemWeaponSubclass.Unarmed] = Enum.ItemWeaponSubclass.Unarmed,
             [Enum.ItemWeaponSubclass.Wand] = Enum.ItemWeaponSubclass.Wand

@@ -1,6 +1,10 @@
 {
     "Lua.diagnostics.globals": [
-        "CanIMogIt"
+        "CanIMogIt",
+        "LE_ITEM_CLASS_ARMOR",
+        "LE_ITEM_CLASS_WEAPON",
+        "LE_ITEM_CLASS_WEAPON",
+        "LE_ITEM_BIND_ON_EQUIP",
     ],
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.builtin": {
