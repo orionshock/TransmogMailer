@@ -1,4 +1,3 @@
--- TransmogMailer.lua
 local addonName, addon = ...
 _G[addonName] = addon
 local MAIL_ATTACHMENT_LIMIT = 12
@@ -77,6 +76,7 @@ function addon:InitSV()
     if GetNormalizedRealmName() and not self.db then
         self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
         TransmogMailerDB = self.db
+        print("[TransmogMailer] Initialized saved variables, modifier set to: " .. tostring(self.db.modifier))
 
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
@@ -128,11 +128,21 @@ function frame:BuildMailingList()
     end
     
     self.mailingList = itemsToMail
+    local itemCount = 0
+    local recipients = ""
+    for recipient, items in pairs(itemsToMail) do
+        itemCount = itemCount + #items
+        recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
+    end
+    print("[TransmogMailer] Built mailing list: " .. itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
 end
 
 -- Set up the next mail
 function frame:SetNextMail()
-    if not self.mailingList or self.nextMail then return end
+    if not self.mailingList or self.nextMail then
+        print("[TransmogMailer] SetNextMail skipped: mailingList=" .. tostring(self.mailingList ~= nil) .. ", nextMail=" .. tostring(self.nextMail ~= nil))
+        return
+    end
     
     local onMailSlot = 1
     local linkList = ""
@@ -162,11 +172,12 @@ function frame:SetNextMail()
                     self.mailingList = nil
                 end
             end
-            DEFAULT_CHAT_FRAME:AddMessage("Sending mail to " .. recipient .. ": " .. linkList, 1, 1, 0)
+            print("[TransmogMailer] Queuing mail to " .. recipient .. ": " .. linkList)
             self:Show() -- Start OnUpdate
             return
         end
     end
+    print("[TransmogMailer] SetNextMail found no items to mail")
 end
 
 -- OnUpdate for mail sending
@@ -187,8 +198,7 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         if GetSendMailItem(1) then
             SendMail(self.nextMail.recipient, "Transmog Items", "")
         else
-            DEFAULT_CHAT_FRAME:AddMessage(
-                "TransmogMailer: No items in slots when trying to send to " .. self.nextMail.recipient, 1, 0, 0)
+            print("[TransmogMailer] No items in mail slots for " .. self.nextMail.recipient .. ", aborting")
             self.nextMail = nil
             self:Hide()
         end
@@ -198,6 +208,7 @@ end)
 -- Event handlers
 function addon:ADDON_LOADED(event, arg1)
     if arg1 == addonName then
+        print("[TransmogMailer] ADDON_LOADED for " .. addonName)
         -- Initialize saved variables
         self:InitSV()
 
@@ -208,44 +219,60 @@ function addon:ADDON_LOADED(event, arg1)
 end
 
 function addon:PLAYER_LOGIN(event)
+    print("[TransmogMailer] PLAYER_LOGIN, initializing saved variables")
     -- Initialize saved variables and character info
     self:InitSV()
 end
 
 function addon:MAIL_SHOW(event)
+    print("[TransmogMailer] MAIL_SHOW event fired")
     if self.db.modifier ~= "NONE" then
         local modifier = self.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
                            IsControlKeyDown() and modifier == "CTRL" or
                            IsAltKeyDown() and modifier == "ALT"
+        print("[TransmogMailer] Modifier check: setting=" .. modifier .. ", IsAltKeyDown=" .. tostring(IsAltKeyDown()) .. ", isModified=" .. tostring(isModified))
         
         if isModified then
+            print("[TransmogMailer] Modifier condition met, starting mailing")
             frame.sendingMail = true
             frame:BuildMailingList()
             if frame.mailingList then
+                print("[TransmogMailer] Mailing list created, setting next mail")
                 frame:SetNextMail()
                 if frame.nextMail then
+                    print("[TransmogMailer] Next mail set, showing frame")
                     frame:Show()
+                else
+                    print("[TransmogMailer] No next mail set")
                 end
+            else
+                print("[TransmogMailer] No mailing list created")
             end
         else
+            print("[TransmogMailer] Modifier condition not met, mailing disabled")
             frame.sendingMail = false
         end
+    else
+        print("[TransmogMailer] Modifier is NONE, mailing disabled")
     end
 end
 
 function addon:MAIL_SEND_SUCCESS(event)
+    print("[TransmogMailer] MAIL_SEND_SUCCESS")
     if frame.sendingMail then
         ClearSendMail()
         frame.nextMail = nil
         frame:SetNextMail()
         if not frame.nextMail and not frame.mailingList then
+            print("[TransmogMailer] No more mails to send, hiding frame")
             frame:Hide()
         end
     end
 end
 
 function addon:MAIL_FAILED(event)
+    print("[TransmogMailer] MAIL_FAILED")
     frame:Hide()
     frame.nextMail = nil
     frame.mailingList = nil
@@ -254,6 +281,7 @@ function addon:MAIL_FAILED(event)
 end
 
 function addon:MAIL_CLOSED(event)
+    print("[TransmogMailer] MAIL_CLOSED")
     frame:Hide()
     frame.nextMail = nil
     frame.mailingList = nil

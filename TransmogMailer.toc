@@ -6,6 +6,8 @@
 ##SavedVariables: TransmogMailerDB
 ##Dependencies: CanIMogIt
 
+makeItGlobal.lua
+
 TransmogMailer.lua 
 
 Options.lua

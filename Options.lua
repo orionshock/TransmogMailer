@@ -9,16 +9,19 @@ StaticPopupDialogs["TRANSMOGMAILER_CONFIRM_DELETE_CHARACTER"] = {
         local characterName = data.characterName
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
+        print("[TransmogMailer] Deleting character: " .. characterName)
         
         -- Remove character from addon.db.characters
         if addon.db.characters and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
             addon.db.characters[currentRealm][currentFaction][characterName] = nil
+            print("[TransmogMailer] Removed " .. characterName .. " from characters")
         end
         
         -- Reset mappings that reference the deleted character to "_none"
         for key, value in pairs(addon.db.mappings) do
             if value == characterName then
                 addon.db.mappings[key] = "_none"
+                print("[TransmogMailer] Reset mapping " .. key .. " to _none")
             end
         end
         
@@ -26,11 +29,13 @@ StaticPopupDialogs["TRANSMOGMAILER_CONFIRM_DELETE_CHARACTER"] = {
         for _, initializer in ipairs(addon.dependentInitializers) do
             local setting = initializer:GetSetting()
             if setting and setting:GetValue() == characterName then
+                print("[TransmogMailer] Resetting setting " .. tostring(setting.variable) .. " to _none")
                 setting:SetValue("_none")
             end
         end
         
         -- Reset the cleanup dropdown to default
+        print("[TransmogMailer] Resetting cleanup dropdown")
         addon.cleanupSetting:SetValue("")
     end,
     timeout = 0,
@@ -46,6 +51,7 @@ function addon.InitializeSettings()
     
     -- Store dependent initializers for armor and weapon dropdowns
     addon.dependentInitializers = {}
+    print("[TransmogMailer] Initializing settings panel")
 
     -- Modifier key dropdown
     local function GetModifierOptions()
@@ -63,6 +69,7 @@ function addon.InitializeSettings()
     )
     local modifierInitializer = Settings.CreateDropdown(category, modifierSetting, GetModifierOptions, "Select the modifier key for mailing transmog items")
     modifierInitializer.reinitializeOnValueChanged = true
+    print("[TransmogMailer] Created modifier dropdown, default value: " .. tostring(addon.db.modifier))
 
     -- Armor mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
@@ -159,6 +166,7 @@ function addon.InitializeSettings()
         function(value)
             addon.cleanupValue = value
             if value and value ~= "" and value ~= UnitName("player") then
+                print("[TransmogMailer] Showing delete popup for " .. value)
                 StaticPopup_Show("TRANSMOGMAILER_CONFIRM_DELETE_CHARACTER", value, nil, {characterName = value})
             end
         end
