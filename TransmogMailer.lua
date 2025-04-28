@@ -3,9 +3,10 @@ local addonName, addon = ...
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
--- Store character info and initialize settings on addon load
+-- Create frame and register events
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("MAIL_SHOW")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
         -- Initialize saved variables
@@ -25,13 +26,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         -- Initialize settings
         addon.InitializeSettings()
         self:UnregisterEvent("ADDON_LOADED")
-    end
-end)
-
--- Mail handling
-frame:RegisterEvent("MAIL_SHOW")
-frame:SetScript("OnEvent", function(self, event)
-    if event == "MAIL_SHOW" and addon.db.modifier ~= "NONE" then
+    elseif event == "MAIL_SHOW" and addon.db.modifier ~= "NONE" then
         local modifier = addon.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
                            IsControlKeyDown() and modifier == "CTRL" or
