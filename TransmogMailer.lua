@@ -36,6 +36,7 @@ end
 -- Create frame and register events
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("MAIL_SHOW")
 frame:RegisterEvent("MAIL_CLOSED")
 frame:RegisterEvent("MAIL_SEND_SUCCESS")
@@ -45,6 +46,25 @@ frame:Hide()
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
+
+-- Initialize saved variables and character data
+function addon:InitSV()
+    if GetNormalizedRealmName() and not self.db then
+        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
+        TransmogMailerDB = self.db
+
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        local name = UnitName("player")
+        local _, class = UnitClass("player")
+        
+        self.db.characters[currentRealm] = self.db.characters[currentRealm] or {}
+        self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
+        self.db.characters[currentRealm][currentFaction][name] = class:upper()
+        
+        frame:UnregisterEvent("PLAYER_LOGIN")
+    end
+end
 
 -- Build mailing list
 function frame:BuildMailingList()
@@ -145,23 +165,17 @@ end)
 function addon:ADDON_LOADED(event, arg1)
     if arg1 == addonName then
         -- Initialize saved variables
-        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
-        TransmogMailerDB = self.db
-
-        -- Store current character info
-        local currentRealm = GetNormalizedRealmName()
-        local currentFaction = UnitFactionGroup("player")
-        local name = UnitName("player")
-        local _, class = UnitClass("player")
-        
-        self.db.characters[currentRealm] = self.db.characters[currentRealm] or {}
-        self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
-        self.db.characters[currentRealm][currentFaction][name] = class:upper()
+        self:InitSV()
 
         -- Initialize settings
         self.InitializeSettings()
         frame:UnregisterEvent("ADDON_LOADED")
     end
+end
+
+function addon:PLAYER_LOGIN(event)
+    -- Initialize saved variables and character info
+    self:InitSV()
 end
 
 function addon:MAIL_SHOW(event)
