@@ -1,4 +1,3 @@
--- Options.lua
 local addonName, addon = ...
 
 addon.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }

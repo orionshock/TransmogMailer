@@ -2,16 +2,15 @@
 local addonName, addon = ...
 
 -- Initialize saved variables
-addon.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
-TransmogMailerDB = addon.db
+addon.db = { modifier = "NONE", mappings = {}, characters = {} }
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
--- Store character info on login
+-- Store character info on addon load
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
+frame:RegisterEvent("ADDON_LOADED")
+frame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == addonName then
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
         local name = UnitName("player")
@@ -20,8 +19,6 @@ frame:SetScript("OnEvent", function(self, event)
         addon.db.characters[currentRealm] = addon.db.characters[currentRealm] or {}
         addon.db.characters[currentRealm][currentFaction] = addon.db.characters[currentRealm][currentFaction] or {}
         addon.db.characters[currentRealm][currentFaction][name] = class:upper()
-        
-        self:UnregisterEvent("PLAYER_LOGIN")
     end
 end)
 
