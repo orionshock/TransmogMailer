@@ -84,8 +84,8 @@ local function ProcessBagItems()
     local currentPlayer = UnitName("player"):lower()
     local itemsToMail = {}
     for bag = 0, NUM_BAG_SLOTS do
-        for slot = 1, GetContainerNumSlots(bag) do
-            local itemLink = GetContainerItemLink(bag, slot)
+        for slot = 1, C_Container.GetContainerNumSlots(bag) do
+            local itemLink = C_Container.GetContainerItemLink(bag, slot)
             if itemLink then
                 local itemType, itemSubTypeID = select(6, GetItemInfo(itemLink))
                 if (itemType == LE_ITEM_CLASS_ARMOR or itemType == LE_ITEM_CLASS_WEAPON) and IsItemEligible(itemLink) then
@@ -121,7 +121,7 @@ local function ProcessBagItems()
             return
         end
         local item = itemsToMail[index]
-        UseContainerItem(item.bag, item.slot)
+        C_Container.UseContainerItem(item.bag, item.slot)
         SendMail(item.recipient, "Transmog Item", "")
         print("TransmogMailer: Mailed " .. item.itemLink .. " to " .. item.recipient)
         index = index + 1
