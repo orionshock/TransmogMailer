@@ -52,57 +52,33 @@ local weaponTypes = {
 
 -- Initialize the settings panel
 local function InitializeSettings()
-    local category, layout = Settings.RegisterCanvasLayoutCategory(CreateFrame("Frame", addonName .. "Options"), addonName)
+    local category, layout = Settings.RegisterVerticalLayoutCategory(addonName)
     Settings.RegisterAddOnCategory(category)
     TransmogMailer.categoryID = category:GetID()
 
-    -- Title and subtitle
-    layout:AddInitializer(function(canvas)
-        local title = canvas:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        title:SetPoint("TOPLEFT", 16, -16)
-        title:SetText("TransmogMailer Options")
-
-        local subtitle = canvas:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        subtitle:SetPoint("TOPLEFT", 16, -40)
-        subtitle:SetText("Configure modifier key and recipients for transmog mailing.")
-    end)
-
     -- Modifier key dropdown
     local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.DefaultVarLocation, Settings.VarType.String, "Modifier Key", "SHIFT")
-    layout:AddInitializer(function(canvas, width, offset)
-        local initializer = Settings.CreateDropDown(category, modifierSetting, function()
-            return {
-                { text = "Shift", value = "SHIFT" },
-                { text = "Ctrl", value = "CTRL" },
-                { text = "Alt", value = "ALT" }
-            }
-        end, "Modifier Key")
-        initializer:SetPoint("TOPLEFT", 16, offset - 80)
-        return initializer:GetHeight() + 16
-    end)
+    layout:AddInitializer(Settings.CreateDropDown(category, modifierSetting, function()
+        return {
+            { text = "Shift", value = "SHIFT" },
+            { text = "Ctrl", value = "CTRL" },
+            { text = "Alt", value = "ALT" }
+        }
+    end, "Modifier Key"))
 
     -- Armor mappings
-    layout:AddInitializer(function(canvas)
-        local header = canvas:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
-        header:SetPoint("TOPLEFT", 16, -140)
-        header:SetText("Armor Recipients")
-    end)
-
+    layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
     for _, armor in ipairs(armorTypes) do
         local setting = Settings.RegisterProxySetting(category, "mapping_" .. armor.key, Settings.DefaultVarLocation, Settings.VarType.String, armor.label .. " Recipient", "")
-        layout:AddInitializer(function(canvas, width, offset)
-            local initializer = Settings.CreateDropDown(category, setting, function()
-                local options = { { text = "None", value = "" } }
-                for _, char in ipairs(TransmogMailerDB.characters or {}) do
-                    if tContains(classEquipRestrictions[armor.key], char.class) then
-                        table.insert(options, { text = char.name, value = char.name })
-                    end
+        layout:AddInitializer(Settings.CreateDropDown(category, setting, function()
+            local options = { { text = "None", value = "" } }
+            for _, char in ipairs(TransmogMailerDB.characters or {}) do
+                if tContains(classEquipRestrictions[armor.key], char.class) then
+                    table.insert(options, { text = char.name, value = char.name })
                 end
-                return options
-            end, armor.label)
-            initializer:SetPoint("TOPLEFT", 16, offset)
-            return initializer:GetHeight() + 8
-        end)
+            end
+            return options
+        end, armor.label))
         -- Sync setting to TransmogMailerDB.mappings
         setting:OnValueChanged(function(value)
             TransmogMailerDB.mappings[armor.key] = value
@@ -114,27 +90,18 @@ local function InitializeSettings()
     end
 
     -- Weapon mappings
-    layout:AddInitializer(function(canvas)
-        local header = canvas:CreateFontString(nil, "OVERLAY", "GameFontHighlightMedium")
-        header:SetPoint("TOPLEFT", 16, -260)
-        header:SetText("Weapon Recipients")
-    end)
-
+    layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
     for _, weapon in ipairs(weaponTypes) do
         local setting = Settings.RegisterProxySetting(category, "mapping_" .. weapon.key, Settings.DefaultVarLocation, Settings.VarType.String, weapon.label .. " Recipient", "")
-        layout:AddInitializer(function(canvas, width, offset)
-            local initializer = Settings.CreateDropDown(category, setting, function()
-                local options = { { text = "None", value = "" } }
-                for _, char in ipairs(TransmogMailerDB.characters or {}) do
-                    if tContains(classEquipRestrictions[weapon.key], char.class) then
-                        table.insert(options, { text = char.name, value = char.name })
-                    end
+        layout:AddInitializer(Settings.CreateDropDown(category, setting, function()
+            local options = { { text = "None", value = "" } }
+            for _, char in ipairs(TransmogMailerDB.characters or {}) do
+                if tContains(classEquipRestrictions[weapon.key], char.class) then
+                    table.insert(options, { text = char.name, value = char.name })
                 end
-                return options
-            end, weapon.label)
-            initializer:SetPoint("TOPLEFT", 16, offset)
-            return initializer:GetHeight() + 8
-        end)
+            end
+            return options
+        end, weapon.label))
         -- Sync setting to TransmogMailerDB.mappings
         setting:OnValueChanged(function(value)
             TransmogMailerDB.mappings[weapon.key] = value
