@@ -1,7 +1,5 @@
 local addonName, addon = ...
 
-addon.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
-
 -- Class equip restrictions for Cataclysm Classic
 local classEquipRestrictions = {
     -- Armor
@@ -126,16 +124,3 @@ function addon.InitializeSettings()
         initializer.reinitializeOnValueChanged = true
     end
 end
-
--- Initialize settings on load
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == addonName then
-        -- Ensure saved variables are initialized
-        addon.db.mappings = addon.db.mappings or {}
-        addon.db.characters = addon.db.characters or {}
-        addon.InitializeSettings()
-        self:UnregisterEvent("ADDON_LOADED")
-    end
-end)

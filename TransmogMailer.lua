@@ -1,16 +1,18 @@
 -- TransmogMailer.lua
 local addonName, addon = ...
 
--- Initialize saved variables
-addon.db = { modifier = "NONE", mappings = {}, characters = {} }
-
 local MAIL_ATTACHMENT_LIMIT = 12
 
--- Store character info on addon load
+-- Store character info and initialize settings on addon load
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
+        -- Initialize saved variables
+        addon.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
+        TransmogMailerDB = addon.db
+
+        -- Store current character info
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
         local name = UnitName("player")
@@ -19,6 +21,10 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         addon.db.characters[currentRealm] = addon.db.characters[currentRealm] or {}
         addon.db.characters[currentRealm][currentFaction] = addon.db.characters[currentRealm][currentFaction] or {}
         addon.db.characters[currentRealm][currentFaction][name] = class:upper()
+
+        -- Initialize settings
+        addon.InitializeSettings()
+        self:UnregisterEvent("ADDON_LOADED")
     end
 end)
 
