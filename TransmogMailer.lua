@@ -1,30 +1,30 @@
 local addonName, addon = ...
-_G[addonName] = addon
+
 local MAIL_ATTACHMENT_LIMIT = 12
 
 -- Armor and weapon types (shared with Options.lua)
 addon.armorTypes = {
-    {key = Enum.ItemArmorSubclass.Cloth, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}},
-    {key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = {"DRUID", "ROGUE"}},
-    {key = Enum.ItemArmorSubclass.Mail, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail", equipClasses = {"HUNTER", "SHAMAN"}},
-    {key = Enum.ItemArmorSubclass.Plate, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}}
+    { key = Enum.ItemArmorSubclass.Cloth,   label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth) or "Cloth",     equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
+    { key = Enum.ItemArmorSubclass.Leather, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather) or "Leather", equipClasses = { "DRUID", "ROGUE" } },
+    { key = Enum.ItemArmorSubclass.Mail,    label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail) or "Mail",       equipClasses = { "HUNTER", "SHAMAN" } },
+    { key = Enum.ItemArmorSubclass.Plate,   label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate) or "Plate",     equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } }
 }
 
 addon.weaponTypes = {
-    {key = Enum.ItemWeaponSubclass.Axe1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Axe2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Mace1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Mace2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace", equipClasses = {"WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Sword1H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK"}},
-    {key = Enum.ItemWeaponSubclass.Sword2H, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword", equipClasses = {"WARRIOR", "PALADIN", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Staff, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff", equipClasses = {"DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR"}},
-    {key = Enum.ItemWeaponSubclass.Polearm, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm", equipClasses = {"WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT"}},
-    {key = Enum.ItemWeaponSubclass.Bows, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows) or "Bows", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Guns, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns) or "Guns", equipClasses = {"HUNTER", "WARRIOR", "ROGUE"}},
-    {key = Enum.ItemWeaponSubclass.Dagger, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger", equipClasses = {"HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR"}},
-    {key = Enum.ItemWeaponSubclass.Unarmed, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon", equipClasses = {"WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID"}},
-    {key = Enum.ItemWeaponSubclass.Wand, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand", equipClasses = {"MAGE", "PRIEST", "WARLOCK"}}
+    { key = Enum.ItemWeaponSubclass.Axe1H,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe",     equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Axe2H,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe",     equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Mace1H,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace",   equipClasses = { "WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Mace2H,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace",   equipClasses = { "WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Sword1H,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword", equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK" } },
+    { key = Enum.ItemWeaponSubclass.Sword2H,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword", equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Staff,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff",              equipClasses = { "DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR" } },
+    { key = Enum.ItemWeaponSubclass.Polearm,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm",          equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT" } },
+    { key = Enum.ItemWeaponSubclass.Bows,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows) or "Bows",                equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    { key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow",        equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    { key = Enum.ItemWeaponSubclass.Guns,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns) or "Guns",                equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    { key = Enum.ItemWeaponSubclass.Dagger,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger",            equipClasses = { "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR" } },
+    { key = Enum.ItemWeaponSubclass.Unarmed,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon",      equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID" } },
+    { key = Enum.ItemWeaponSubclass.Wand,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand",                equipClasses = { "MAGE", "PRIEST", "WARLOCK" } }
 }
 
 -- Tooltip scanner for binding check
@@ -59,44 +59,98 @@ end
 
 -- Create frame and register events
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterEvent("MAIL_SHOW")
-frame:RegisterEvent("MAIL_CLOSED")
-frame:RegisterEvent("MAIL_SEND_SUCCESS")
-frame:RegisterEvent("MAIL_FAILED")
 frame:Hide()
 
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
 
--- Initialize saved variables and character data
-function addon:InitSV()
-    if GetNormalizedRealmName() and not self.db then
-        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
-        TransmogMailerDB = self.db
-        print("[TransmogMailer] Initialized saved variables, modifier set to: " .. tostring(self.db.modifier))
 
-        local currentRealm = GetNormalizedRealmName()
-        local currentFaction = UnitFactionGroup("player")
-        local name = UnitName("player")
-        local _, class = UnitClass("player")
-        
-        self.db.characters[currentRealm] = self.db.characters[currentRealm] or {}
-        self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
-        self.db.characters[currentRealm][currentFaction][name] = class:upper()
-        
-        -- Initialize mappings with "_none" for all armor and weapon types
-        for _, armor in ipairs(self.armorTypes) do
-            self.db.mappings["armor_" .. armor.key] = self.db.mappings["armor_" .. armor.key] or "_none"
-        end
-        for _, weapon in ipairs(self.weaponTypes) do
-            self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
-        end
-        
-        frame:UnregisterEvent("PLAYER_LOGIN")
+local function IsItemBoE(itemLink, bag, slot)
+    return CanIMogIt:IsItemBindOnEquip(itemLink, bag, slot)
+end
+
+-- Check if a recipient can learn a transmog appearance
+function addon:CanLearnAppearance(itemLink, recipient)
+    local currentRealm = GetNormalizedRealmName()
+    local currentFaction = UnitFactionGroup("player")
+    local recipientClass = self.db.characters[currentRealm][currentFaction][recipient]
+    if not recipientClass then
+        print("[TransmogMailer] Error: No class found for recipient " .. recipient)
+        return false
     end
+
+    -- Check if the item is transmogable
+    if not CanIMogIt:IsTransmogable(itemLink) then
+        print("[TransmogMailer] Item is not transmogable: " .. itemLink)
+        return false
+    end
+
+    -- Get item information
+    local itemID = CanIMogIt:GetItemID(itemLink)
+    local itemClass, itemSubClass, slotName = CanIMogIt:GetItemClassName(itemLink),
+        CanIMogIt:GetItemSubClassName(itemLink), CanIMogIt:GetItemSlotName(itemLink)
+    if not itemClass or not itemSubClass or not slotName then
+        print("[TransmogMailer] Error: Invalid item info for " .. itemLink)
+        return false
+    end
+
+    -- Check class restrictions from CanIMogIt
+    local classRestrictions = CanIMogIt:GetItemClassRestrictions(itemLink)
+    if classRestrictions then
+        local canEquip = false
+        for _, allowedClass in ipairs(classRestrictions) do
+            if allowedClass == recipientClass then
+                canEquip = true
+                break
+            end
+        end
+        if not canEquip then
+            print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") is not allowed to equip " .. itemLink)
+            return false
+        end
+    end
+
+    -- Check if the item is armor or weapon
+    local isArmor = CanIMogIt:IsItemArmor(itemLink)
+    if isArmor then
+        -- For armor, check if it matches the recipient's primary armor type
+        local recipientArmorTypeID = CanIMogIt.classArmorTypeMap[recipientClass]
+        local recipientArmorType = select(1, GetItemSubClassInfo(4, recipientArmorTypeID))
+        local isCosmetic = CanIMogIt:IsArmorCosmetic(itemLink)
+        if not isCosmetic and itemSubClass ~= recipientArmorType then
+            print("[TransmogMailer] " ..
+            recipient ..
+            " (" .. recipientClass .. ") cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
+            return false
+        end
+    else
+        -- For weapons, check if the recipient's class can equip the weapon type
+        local weaponType = nil
+        for _, typeInfo in ipairs(self.weaponTypes) do
+            if typeInfo.key == itemSubClass then
+                weaponType = typeInfo
+                break
+            end
+        end
+        if weaponType then
+            if not tContains(weaponType.equipClasses, recipientClass) then
+                print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") cannot equip " .. itemSubClass)
+                return false
+            end
+        else
+            print("[TransmogMailer] Unknown weapon subclass: " .. itemSubClass)
+            return false
+        end
+    end
+
+    -- Check if the character can learn the transmog (ignoring level requirements)
+    if not CanIMogIt:CharacterCanLearnTransmog(itemLink) then
+        print("[TransmogMailer] " .. recipient .. " (" .. recipientClass .. ") cannot learn transmog for " .. itemLink)
+        return false
+    end
+
+    return true
 end
 
 -- Build mailing list
@@ -104,7 +158,7 @@ function frame:BuildMailingList()
     self.mailingList = nil
     local itemsToMail = {}
     local currentPlayer = UnitName("player")
-    
+
     -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
@@ -112,21 +166,21 @@ function frame:BuildMailingList()
             if itemLink and not IsBound(bag, slot) then
                 local itemID = C_Container.GetContainerItemID(bag, slot)
                 local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
-                
+
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
                     local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
-                        if CanIMogIt and CanIMogIt:IsValidAppearanceForCharacter(itemLink, recipient) then
+                        if addon:CanLearnAppearance(itemLink, recipient) then
                             itemsToMail[recipient] = itemsToMail[recipient] or {}
-                            table.insert(itemsToMail[recipient], {bag = bag, slot = slot})
+                            table.insert(itemsToMail[recipient], { bag = bag, slot = slot })
                         end
                     end
                 end
             end
         end
     end
-    
+
     self.mailingList = itemsToMail
     local itemCount = 0
     local recipients = ""
@@ -134,16 +188,18 @@ function frame:BuildMailingList()
         itemCount = itemCount + #items
         recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
     end
-    print("[TransmogMailer] Built mailing list: " .. itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
+    print("[TransmogMailer] Built mailing list: " ..
+    itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
 end
 
 -- Set up the next mail
 function frame:SetNextMail()
     if not self.mailingList or self.nextMail then
-        print("[TransmogMailer] SetNextMail skipped: mailingList=" .. tostring(self.mailingList ~= nil) .. ", nextMail=" .. tostring(self.nextMail ~= nil))
+        print("[TransmogMailer] SetNextMail skipped: mailingList=" ..
+        tostring(self.mailingList ~= nil) .. ", nextMail=" .. tostring(self.nextMail ~= nil))
         return
     end
-    
+
     local onMailSlot = 1
     local linkList = ""
     for recipient, itemList in pairs(self.mailingList) do
@@ -152,7 +208,7 @@ function frame:SetNextMail()
             local itemInfo = C_Container.GetContainerItemInfo(itemLoc.bag, itemLoc.slot)
             if itemInfo and itemInfo.stackCount then
                 linkList = (linkList ~= "" and linkList .. ", " or "") ..
-                           (itemInfo.stackCount > 1 and itemInfo.stackCount .. "x" or "") .. itemInfo.hyperlink
+                    (itemInfo.stackCount > 1 and itemInfo.stackCount .. "x" or "") .. itemInfo.hyperlink
                 C_Container.UseContainerItem(itemLoc.bag, itemLoc.slot)
                 ClickSendMailItemButton(onMailSlot)
                 self.nextMail = self.nextMail or { items = {}, recipient = recipient }
@@ -186,7 +242,7 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     self.elapsed = self.elapsed + elapsed
     if self.elapsed > 1 then
         self.elapsed = 0
-        
+
         if not self.nextMail then
             self:SetNextMail()
             if not self.nextMail then
@@ -194,7 +250,7 @@ frame:SetScript("OnUpdate", function(self, elapsed)
             end
             return
         end
-        
+
         if GetSendMailItem(1) then
             SendMail(self.nextMail.recipient, "Transmog Items", "")
         else
@@ -205,34 +261,16 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 
--- Event handlers
-function addon:ADDON_LOADED(event, arg1)
-    if arg1 == addonName then
-        print("[TransmogMailer] ADDON_LOADED for " .. addonName)
-        -- Initialize saved variables
-        self:InitSV()
-
-        -- Initialize settings
-        self.InitializeSettings()
-        frame:UnregisterEvent("ADDON_LOADED")
-    end
-end
-
-function addon:PLAYER_LOGIN(event)
-    print("[TransmogMailer] PLAYER_LOGIN, initializing saved variables")
-    -- Initialize saved variables and character info
-    self:InitSV()
-end
-
 function addon:MAIL_SHOW(event)
     print("[TransmogMailer] MAIL_SHOW event fired")
     if self.db.modifier ~= "NONE" then
         local modifier = self.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
-                           IsControlKeyDown() and modifier == "CTRL" or
-                           IsAltKeyDown() and modifier == "ALT"
-        print("[TransmogMailer] Modifier check: setting=" .. modifier .. ", IsAltKeyDown=" .. tostring(IsAltKeyDown()) .. ", isModified=" .. tostring(isModified))
-        
+            IsControlKeyDown() and modifier == "CTRL" or
+            IsAltKeyDown() and modifier == "ALT"
+        print("[TransmogMailer] Modifier check: setting=" ..
+        modifier .. ", IsAltKeyDown=" .. tostring(IsAltKeyDown()) .. ", isModified=" .. tostring(isModified))
+
         if isModified then
             print("[TransmogMailer] Modifier condition met, starting mailing")
             frame.sendingMail = true
@@ -289,12 +327,73 @@ function addon:MAIL_CLOSED(event)
     ClearSendMail()
 end
 
+-- Event handlers
+
+-- Initialize saved variables and character data
+function addon:InitSV()
+    if GetNormalizedRealmName() and not self.db then
+        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
+        TransmogMailerDB = self.db
+        print("[TransmogMailer] Initialized saved variables, modifier set to: " .. tostring(self.db.modifier))
+
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        local name = UnitName("player")
+        local _, class = UnitClass("player")
+
+        self.db.characters[currentRealm] = self.db.characters[currentRealm] or {}
+        self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
+        self.db.characters[currentRealm][currentFaction][name] = class:upper()
+
+        -- Initialize mappings with "_none" for all armor and weapon types
+        for _, armor in ipairs(self.armorTypes) do
+            self.db.mappings["armor_" .. armor.key] = self.db.mappings["armor_" .. armor.key] or "_none"
+        end
+        for _, weapon in ipairs(self.weaponTypes) do
+            self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
+        end
+
+        frame:UnregisterEvent("PLAYER_LOGIN")
+        return true
+    end
+    return false
+end
+
+function addon:ADDON_LOADED(event, arg1)
+    if arg1 == addonName then
+        print("[TransmogMailer] ADDON_LOADED for " .. addonName)
+        -- Initialize saved variables
+        local svLoaded = self:InitSV()
+        if svLoaded then
+            -- Initialize settings
+            self.InitializeSettings()
+        end
+    end
+end
+
+function addon:PLAYER_LOGIN(event)
+    print("[TransmogMailer] PLAYER_LOGIN, initializing saved variables")
+    -- Initialize saved variables and character info
+    local svLoaded = self:InitSV()
+    if svLoaded then
+        -- Initialize settings
+        self.InitializeSettings()
+    end
+end
+
 -- Dispatch events to addon methods
 frame:SetScript("OnEvent", function(frame, event, ...)
     if type(addon[event]) == "function" then
         addon[event](addon, event, ...)
     end
 end)
+
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:RegisterEvent("MAIL_SHOW")
+frame:RegisterEvent("MAIL_CLOSED")
+frame:RegisterEvent("MAIL_SEND_SUCCESS")
+frame:RegisterEvent("MAIL_FAILED")
 
 -- Slash command to open settings
 SLASH_TRANSMOGMAILER1 = "/transmogmailer"
