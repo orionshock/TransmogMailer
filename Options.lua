@@ -59,63 +59,59 @@ function addon.InitializeSettings()
     addon.categoryID = category:GetID()
 
     -- Modifier key dropdown
-    local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.DefaultVarLocation, Settings.VarType.String, "Modifier Key", "SHIFT")
-    layout:AddInitializer(Settings.CreateDropdown(category, modifierSetting, function()
-        return {
-            { text = "Shift", value = "SHIFT" },
-            { text = "Ctrl", value = "CTRL" },
-            { text = "Alt", value = "ALT" }
-        }
-    end, "Modifier Key"))
+    local modifierOptions = Settings.CreateControlTextContainer()
+    modifierOptions:Add("SHIFT", "Shift", "Use Shift key as modifier")
+    modifierOptions:Add("CTRL", "Ctrl", "Use Ctrl key as modifier")
+    modifierOptions:Add("ALT", "Alt", "Use Alt key as modifier")
+    
+    local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.VarType.String, "Modifier Key", "SHIFT",
+        function() return addon.db.modifier end,
+        function(value) addon.db.modifier = value end
+    )
+    Settings.CreateDropdown(category, modifierSetting, modifierOptions:GetData(), "Select the modifier key for mailing transmog items")
 
     -- Armor mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
     for _, armor in ipairs(armorTypes) do
-        local setting = Settings.RegisterProxySetting(category, "mapping_" .. armor.key, Settings.DefaultVarLocation, Settings.VarType.String, armor.label .. " Recipient", "")
-        layout:AddInitializer(Settings.CreateDropdown(category, setting, function()
-            local options = { { text = "None", value = "" } }
-            local currentRealm = GetNormalizedRealmName()
-            local currentFaction = UnitFactionGroup("player")
-            for _, char in ipairs(addon.db.characters or {}) do
-                if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[armor.key], char.class) then
-                    table.insert(options, { text = char.name, value = char.name })
+        local options = Settings.CreateControlTextContainer()
+        options:Add("", "None", "No recipient selected")
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        if addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
+                if tContains(classEquipRestrictions[armor.key], class) then
+                    options:Add(name, name, "Send to " .. name)
                 end
             end
-            return options
-        end, armor.label))
-        -- Sync setting to addon.db.mappings
-        setting:OnValueChanged(function(value)
-            addon.db.mappings[armor.key] = value
-        end)
-        -- Initialize from saved value
-        if addon.db.mappings[armor.key] then
-            setting:SetValue(addon.db.mappings[armor.key])
         end
+        
+        local setting = Settings.RegisterProxySetting(category, "armor_" .. armor.key, Settings.VarType.String, armor.label .. " Recipient", "",
+            function() return addon.db.mappings[armor.key] or "" end,
+            function(value) addon.db.mappings[armor.key] = value end
+        )
+        Settings.CreateDropdown(category, setting, options:GetData(), "Select the character to receive " .. armor.label .. " items")
     end
 
     -- Weapon mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
     for _, weapon in ipairs(weaponTypes) do
-        local setting = Settings.RegisterProxySetting(category, "mapping_" .. weapon.key, Settings.DefaultVarLocation, Settings.VarType.String, weapon.label .. " Recipient", "")
-        layout:AddInitializer(Settings.CreateDropdown(category, setting, function()
-            local options = { { text = "None", value = "" } }
-            local currentRealm = GetNormalizedRealmName()
-            local currentFaction = UnitFactionGroup("player")
-            for _, char in ipairs(addon.db.characters or {}) do
-                if char.realm == currentRealm and char.faction == currentFaction and tContains(classEquipRestrictions[weapon.key], char.class) then
-                    table.insert(options, { text = char.name, value = char.name })
+        local options = Settings.CreateControlTextContainer()
+        options:Add("", "None", "No recipient selected")
+        local currentRealm = GetNormalizedRealmName()
+        local currentFaction = UnitFactionGroup("player")
+        if addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+            for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
+                if tContains(classEquipRestrictions[weapon.key], class) then
+                    options:Add(name, name, "Send to " .. name)
                 end
             end
-            return options
-        end, weapon.label))
-        -- Sync setting to addon.db.mappings
-        setting:OnValueChanged(function(value)
-            addon.db.mappings[weapon.key] = value
-        end)
-        -- Initialize from saved value
-        if addon.db.mappings[weapon.key] then
-            setting:SetValue(addon.db.mappings[weapon.key])
         end
+        
+        local setting = Settings.RegisterProxySetting(category, "weapon_" .. weapon.key, Settings.VarType.String, weapon.label .. " Recipient", "",
+            function() return addon.db.mappings[weapon.key] or "" end,
+            function(value) addon.db.mappings[weapon.key] = value end
+        )
+        Settings.CreateDropdown(category, setting, options:GetData(), "Select the character to receive " .. weapon.label .. " items")
     end
 end
 

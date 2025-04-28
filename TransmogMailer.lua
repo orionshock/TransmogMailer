@@ -14,20 +14,11 @@ frame:SetScript("OnEvent", function(self, event)
         local realm = GetNormalizedRealmName()
         local faction = UnitFactionGroup("player")
         if charName and class and realm and faction then
-            -- Ensure characters table exists
-            addon.db.characters = addon.db.characters or {}
-            local found = false
-            for _, char in ipairs(addon.db.characters) do
-                if char.name == charName and char.realm == realm then
-                    char.class = class -- Update class if changed
-                    char.faction = faction -- Update faction if changed
-                    found = true
-                    break
-                end
-            end
-            if not found then
-                table.insert(addon.db.characters, { name = charName, class = class, realm = realm, faction = faction })
-            end
+            -- Ensure nested character tables exist
+            addon.db.characters[realm] = addon.db.characters[realm] or {}
+            addon.db.characters[realm][faction] = addon.db.characters[realm][faction] or {}
+            -- Store class in localization-independent format
+            addon.db.characters[realm][faction][charName] = class
         end
     elseif event == "MAIL_SHOW" then
         local modifier = addon.db.modifier or "SHIFT"
