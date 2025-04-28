@@ -65,6 +65,7 @@ frame:Hide()
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
+frame.clearingMail = false -- Flag to prevent recursive ClearSendMail
 
 local function IsItemBoE(itemLink, bag, slot)
     return CanIMogIt:IsItemBindOnEquip(itemLink, bag, slot)
@@ -72,7 +73,6 @@ end
 
 -- Check if a recipient can learn a transmog appearance
 function addon:CanLearnAppearance(itemLink, recipient)
-    print("[TransmogMailer][Debug] CanLearnAppearance called for item: " .. (itemLink or "nil") .. ", recipient: " .. (recipient or "nil"))
     local currentRealm = GetNormalizedRealmName()
     local currentFaction = UnitFactionGroup("player")
     local recipientClass = self.db.characters[currentRealm][currentFaction][recipient]
@@ -80,7 +80,6 @@ function addon:CanLearnAppearance(itemLink, recipient)
         print("[TransmogMailer][Debug] Error: No class found for recipient " .. (recipient or "nil"))
         return false
     end
-    print("[TransmogMailer][Debug] Recipient class: " .. recipientClass)
 
     -- Check if CanIMogIt is loaded
     if not CanIMogIt then
@@ -93,17 +92,15 @@ function addon:CanLearnAppearance(itemLink, recipient)
         print("[TransmogMailer][Debug] Item is not transmogable: " .. itemLink)
         return false
     end
-    print("[TransmogMailer][Debug] Item is transmogable")
 
     -- Get item information
     local itemID = CanIMogIt:GetItemID(itemLink)
     local itemClass, itemSubClass, slotName = CanIMogIt:GetItemClassName(itemLink),
         CanIMogIt:GetItemSubClassName(itemLink), CanIMogIt:GetItemSlotName(itemLink)
     if not itemClass or not itemSubClass or not slotName then
-        print("[TransmogMailer][Debug] Error: Invalid item info - Class: " .. (itemClass or "nil") .. ", SubClass: " .. (itemSubClass or "nil") .. ", Slot: " .. (slotName or "nil"))
+        print("[TransmogMailer][Debug] Error: Invalid item info for " .. itemLink)
         return false
     end
-    print("[TransmogMailer][Debug] Item info - Class: " .. itemClass .. ", SubClass: " .. itemSubClass .. ", Slot: " .. slotName)
 
     -- Check class restrictions from CanIMogIt
     local classRestrictions = CanIMogIt:GetItemClassRestrictions(itemLink)
@@ -119,14 +116,10 @@ function addon:CanLearnAppearance(itemLink, recipient)
             print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") not allowed to equip " .. itemLink)
             return false
         end
-        print("[TransmogMailer][Debug] Class restrictions passed")
-    else
-        print("[TransmogMailer][Debug] No class restrictions")
     end
 
     -- Check if the item is armor or weapon
     local isArmor = CanIMogIt:IsItemArmor(itemLink)
-    print("[TransmogMailer][Debug] IsArmor: " .. tostring(isArmor))
     if isArmor then
         -- For armor, check if it matches the recipient's primary armor type
         local recipientArmorType = nil
@@ -140,15 +133,11 @@ function addon:CanLearnAppearance(itemLink, recipient)
             print("[TransmogMailer][Debug] Error: No armor type found for class " .. recipientClass)
             return false
         end
-        print("[TransmogMailer][Debug] Recipient armor type: " .. recipientArmorType)
-
         local isCosmetic = CanIMogIt:IsArmorCosmetic(itemLink)
-        print("[TransmogMailer][Debug] IsCosmetic: " .. tostring(isCosmetic))
         if not isCosmetic and itemSubClass ~= recipientArmorType then
-            print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
+            print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot learn " .. itemSubClass .. " (requires " .. recipientArmorType .. ")")
             return false
         end
-        print("[TransmogMailer][Debug] Armor type check passed")
     else
         -- For weapons, check if the recipient's class can equip the weapon type
         local weaponType = nil
@@ -160,24 +149,16 @@ function addon:CanLearnAppearance(itemLink, recipient)
         end
         if weaponType then
             if not tContains(weaponType.equipClasses, recipientClass) then
-                print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot equip " .. itemSubClass)
+                print("[TransmogMailer][Debug] Recipient " .. recipient .. " cannot equip " .. itemSubClass)
                 return false
             end
-            print("[TransmogMailer][Debug] Weapon type check passed")
         else
             print("[TransmogMailer][Debug] Error: Unknown weapon subclass: " .. itemSubClass)
             return false
         end
     end
 
-    -- Check if the character can learn the transmog (ignoring level requirements)
-    -- if not CanIMogIt:CharacterCanLearnTransmog(itemLink) then
-    --     print("[TransmogMailer][Debug] Recipient " .. recipient .. " (" .. recipientClass .. ") cannot learn transmog for " .. itemLink)
-    --     return false
-    -- end
-    print("[TransmogMailer][Debug] Transmog learnability check passed")
-
-    print("[TransmogMailer][Debug] CanLearnAppearance returning true")
+    print("[TransmogMailer][Debug] CanLearnAppearance returning true for " .. itemLink .. " to " .. recipient)
     return true
 end
 
@@ -190,41 +171,25 @@ function frame:BuildMailingList()
 
     -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
-        print("[TransmogMailer][Debug] Scanning bag: " .. bag .. ", slots: " .. C_Container.GetContainerNumSlots(bag))
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            print("[TransmogMailer][Debug] Checking bag: " .. bag .. ", slot: " .. slot)
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
-            print("[TransmogMailer][Debug] ItemLink: " .. (itemLink or "nil"))
             if itemLink and not IsBound(bag, slot) then
-                print("[TransmogMailer][Debug] Item is BoE (not bound) for bag: " .. bag .. ", slot: " .. slot)
                 local itemID = C_Container.GetContainerItemID(bag, slot)
-                print("[TransmogMailer][Debug] ItemID: " .. (itemID or "nil"))
                 local itemClass, itemSubClass = select(12, C_Item.GetItemInfo(itemID))
-                print("[TransmogMailer][Debug] GetItemInfo result - ItemClass: " .. (itemClass or "nil") .. ", ItemSubClass: " .. (itemSubClass or "nil"))
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
-                    print("[TransmogMailer][Debug] Item is Armor or Weapon, processing...")
                     local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
-                    print("[TransmogMailer][Debug] Calculated prefix: " .. prefix .. ", SubClass: " .. (itemSubClass or "nil"))
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
-                    print("[TransmogMailer][Debug] Looked up recipient for " .. prefix .. (itemSubClass or "nil") .. ": " .. (recipient or "nil"))
+                    print("[TransmogMailer][Debug] Recipient for " .. prefix .. (itemSubClass or "nil") .. ": " .. (recipient or "nil"))
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
-                        print("[TransmogMailer][Debug] Valid recipient: " .. recipient .. ", checking CanLearnAppearance")
                         if addon:CanLearnAppearance(itemLink, recipient) then
-                            print("[TransmogMailer][Debug] CanLearnAppearance returned true for " .. itemLink .. " to " .. recipient)
                             itemsToMail[recipient] = itemsToMail[recipient] or {}
                             table.insert(itemsToMail[recipient], { bag = bag, slot = slot })
-                            print("[TransmogMailer][Debug] Added item to itemsToMail for " .. recipient .. ": bag=" .. bag .. ", slot=" .. slot)
-                        else
-                            print("[TransmogMailer][Debug] CanLearnAppearance returned false for " .. itemLink .. " to " .. recipient)
+                            print("[TransmogMailer][Debug] Added item to mailing list: " .. itemLink .. " for " .. recipient)
                         end
                     else
-                        print("[TransmogMailer][Debug] Skipped recipient: " .. (recipient or "nil") .. " (invalid: _none, empty, or current player)")
+                        print("[TransmogMailer][Debug] Skipped item: " .. itemLink .. ", invalid recipient: " .. (recipient or "nil"))
                     end
-                else
-                    print("[TransmogMailer][Debug] Item is not Armor or Weapon, skipping")
                 end
-            else
-                print("[TransmogMailer][Debug] Item is bound or no itemLink, skipping bag: " .. bag .. ", slot: " .. slot)
             end
         end
     end
@@ -235,18 +200,15 @@ function frame:BuildMailingList()
     for recipient, items in pairs(itemsToMail) do
         itemCount = itemCount + #items
         recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
-        print("[TransmogMailer][Debug] Recipient: " .. recipient .. ", Item count: " .. #items)
     end
-    print("[TransmogMailer] Built mailing list: " ..
-        itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
-    print("[TransmogMailer][Debug] Mailing list complete, total items: " .. itemCount)
+    print("[TransmogMailer] Built mailing list: " .. itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
 end
 
 -- Set up the next mail
 function frame:SetNextMail()
-    if not self.mailingList or self.nextMail then
-        print("[TransmogMailer] SetNextMail skipped: mailingList=" ..
-        tostring(self.mailingList ~= nil) .. ", nextMail=" .. tostring(self.nextMail ~= nil))
+    if not self.mailingList or self.nextMail or self.clearingMail then
+        print("[TransmogMailer][Debug] SetNextMail skipped: mailingList=" ..
+            tostring(self.mailingList ~= nil) .. ", nextMail=" .. tostring(self.nextMail ~= nil) .. ", clearingMail=" .. tostring(self.clearingMail))
         return
     end
 
@@ -278,33 +240,40 @@ function frame:SetNextMail()
                     self.mailingList = nil
                 end
             end
-            print("[TransmogMailer] Queuing mail to " .. recipient .. ": " .. linkList)
-            self:Show() -- Start OnUpdate
+            print("[TransmogMailer][Debug] Queuing mail to " .. recipient .. ": " .. linkList)
+            self:Show()
             return
         end
     end
-    print("[TransmogMailer] SetNextMail found no items to mail")
+    print("[TransmogMailer][Debug] SetNextMail found no items to mail")
 end
 
 -- OnUpdate for mail sending
-frame:SetScript("OnShow", function(self) self.elapsed = 0 end)
+frame:SetScript("OnShow", function(self)
+    self.elapsed = 0
+    print("[TransmogMailer][Debug] Frame shown, starting mail processing")
+end)
 frame:SetScript("OnUpdate", function(self, elapsed)
+    if self.clearingMail then return end
     self.elapsed = self.elapsed + elapsed
     if self.elapsed > 1 then
         self.elapsed = 0
 
         if not self.nextMail then
+            print("[TransmogMailer][Debug] No nextMail, calling SetNextMail")
             self:SetNextMail()
             if not self.nextMail then
+                print("[TransmogMailer][Debug] No more mails to send, hiding frame")
                 self:Hide()
             end
             return
         end
 
         if GetSendMailItem(1) then
+            print("[TransmogMailer][Debug] Sending mail to " .. self.nextMail.recipient)
             SendMail(self.nextMail.recipient, "Transmog Items", "")
         else
-            print("[TransmogMailer] No items in mail slots for " .. self.nextMail.recipient .. ", aborting")
+            print("[TransmogMailer][Debug] No items in mail slots for " .. self.nextMail.recipient .. ", aborting")
             self.nextMail = nil
             self:Hide()
         end
@@ -318,66 +287,67 @@ function addon:MAIL_SHOW(event)
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
             IsControlKeyDown() and modifier == "CTRL" or
             IsAltKeyDown() and modifier == "ALT"
-        print("[TransmogMailer] Modifier check: setting=" ..
-        modifier .. ", IsAltKeyDown=" .. tostring(IsAltKeyDown()) .. ", isModified=" .. tostring(isModified))
+        print("[TransmogMailer][Debug] Modifier check: setting=" .. modifier .. ", isModified=" .. tostring(isModified))
 
         if isModified then
-            print("[TransmogMailer] Modifier condition met, starting mailing")
+            print("[TransmogMailer][Debug] Modifier condition met, starting mailing")
             frame.sendingMail = true
             frame:BuildMailingList()
             if frame.mailingList then
-                print("[TransmogMailer] Mailing list created, setting next mail")
+                print("[TransmogMailer][Debug] Mailing list created, setting next mail")
                 frame:SetNextMail()
-                if frame.nextMail then
-                    print("[TransmogMailer] Next mail set, showing frame")
-                    frame:Show()
-                else
-                    print("[TransmogMailer] No next mail set")
-                end
             else
-                print("[TransmogMailer] No mailing list created")
+                print("[TransmogMailer][Debug] No mailing list created")
             end
         else
-            print("[TransmogMailer] Modifier condition not met, mailing disabled")
+            print("[TransmogMailer][Debug] Modifier condition not met, mailing disabled")
             frame.sendingMail = false
         end
     else
-        print("[TransmogMailer] Modifier is NONE, mailing disabled")
+        print("[TransmogMailer][Debug] Modifier is NONE, mailing disabled")
     end
 end
 
 function addon:MAIL_SEND_SUCCESS(event)
-    print("[TransmogMailer] MAIL_SEND_SUCCESS")
-    if frame.sendingMail then
+    print("[TransmogMailer][Debug] MAIL_SEND_SUCCESS")
+    if frame.sendingMail and not frame.clearingMail then
+        frame.clearingMail = true
         ClearSendMail()
+        frame.clearingMail = false
         frame.nextMail = nil
         frame:SetNextMail()
         if not frame.nextMail and not frame.mailingList then
-            print("[TransmogMailer] No more mails to send, hiding frame")
+            print("[TransmogMailer][Debug] No more mails to send, hiding frame")
             frame:Hide()
         end
     end
 end
 
 function addon:MAIL_FAILED(event)
-    print("[TransmogMailer] MAIL_FAILED")
+    print("[TransmogMailer][Debug] MAIL_FAILED")
+    if not frame.clearingMail then
+        frame.clearingMail = true
+        ClearSendMail()
+        frame.clearingMail = false
+    end
     frame:Hide()
     frame.nextMail = nil
     frame.mailingList = nil
     frame.sendingMail = false
-    ClearSendMail()
 end
 
 function addon:MAIL_CLOSED(event)
-    print("[TransmogMailer] MAIL_CLOSED")
+    print("[TransmogMailer][Debug] MAIL_CLOSED")
+    if not frame.clearingMail then
+        frame.clearingMail = true
+        ClearSendMail()
+        frame.clearingMail = false
+    end
     frame:Hide()
     frame.nextMail = nil
     frame.mailingList = nil
     frame.sendingMail = false
-    ClearSendMail()
 end
-
--- Event handlers
 
 -- Initialize saved variables and character data
 function addon:InitSV()
