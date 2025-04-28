@@ -3,6 +3,36 @@ local addonName, addon = ...
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
+-- Tooltip scanner for binding check
+local tooltipFrame = CreateFrame("GameTooltip", "TransmogMailerTooltip", UIParent)
+local tooltipLeftLines = {}
+for i = 1, 5 do
+    local left = tooltipFrame:CreateFontString()
+    left:SetFontObject(GameFontNormal)
+    tooltipFrame:AddFontStrings(left, tooltipFrame:CreateFontString())
+    tooltipLeftLines[i] = left
+end
+tooltipFrame:SetOwner(UIParent, "ANCHOR_NONE")
+
+local function IsBound(bag, slot)
+    tooltipFrame:ClearLines()
+    tooltipFrame:SetBagItem(bag, slot)
+    if not tooltipFrame:IsShown() then
+        tooltipFrame:SetOwner(UIParent, "ANCHOR_NONE")
+        tooltipFrame:SetBagItem(bag, slot)
+        if not tooltipFrame:IsShown() then
+            error(("TransmogMailer - Cannot Scan Tooltip - Bag: %s, Slot: %s"):format(bag, slot))
+        end
+    end
+    for i = 2, 5 do
+        local txt = tooltipLeftLines[i]:GetText()
+        if txt == ITEM_SOULBOUND or txt == ITEM_BNETACCOUNTBOUND then
+            return true
+        end
+    end
+    return false
+end
+
 -- Create frame and register events
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
@@ -22,11 +52,11 @@ function frame:BuildMailingList()
     local itemsToMail = {}
     local currentPlayer = UnitName("player")
     
-    -- Collect items to mail
+    -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
-            if itemLink then
+            if itemLink and not IsBound(bag, slot) then
                 local itemID = C_Container.GetContainerItemID(bag, slot)
                 local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
                 

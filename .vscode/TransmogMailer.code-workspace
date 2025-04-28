@@ -27,8 +27,8 @@
             "CTRL_KEY",
             "SHIFT_KEY",
             "NONE_KEY",
-            "VIDEO_OPTIONS_NEED_CLIENTRESTART",
-            "VIDEO_OPTIONS_RECOMMENDED"
+            "ITEM_SOULBOUND",
+            "ITEM_BNETACCOUNTBOUND"
         ]
     }
 }
