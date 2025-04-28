@@ -59,6 +59,7 @@ end
 
 -- Create frame and register events
 local frame = CreateFrame("Frame")
+addon.frame = frame
 frame:Hide()
 
 frame.mailingList = nil
@@ -158,24 +159,34 @@ function frame:BuildMailingList()
     self.mailingList = nil
     local itemsToMail = {}
     local currentPlayer = UnitName("player")
+    print("[TransmogMailer][Debug] Starting BuildMailingList for player: " .. (currentPlayer or "nil"))
 
     -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
             if itemLink and not IsBound(bag, slot) then
+                print("[TransmogMailer][Debug] Item is BoE (not bound) for bag: " .. bag .. ", slot: " .. slot)
                 local itemID = C_Container.GetContainerItemID(bag, slot)
-                local _, _, _, _, _, itemClass, itemSubClass = GetItemInfo(itemID)
-
+                local itemClass, itemSubClass = select(12, C_Item.GetItemInfo(itemID))
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
                     local prefix = itemClass == LE_ITEM_CLASS_ARMOR and "armor_" or "weapon_"
+                    print("[TransmogMailer][Debug] Calculated prefix: " .. prefix .. ", SubClass: " .. (itemSubClass or "nil"))
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
+                        print("[TransmogMailer][Debug] Valid recipient: " .. recipient .. ", checking CanLearnAppearance")
                         if addon:CanLearnAppearance(itemLink, recipient) then
+                            print("[TransmogMailer][Debug] CanLearnAppearance returned true for " .. itemLink .. " to " .. recipient)
                             itemsToMail[recipient] = itemsToMail[recipient] or {}
                             table.insert(itemsToMail[recipient], { bag = bag, slot = slot })
+                            print("[TransmogMailer][Debug] Added item to itemsToMail for " .. recipient .. ": bag=" .. bag .. ", slot=" .. slot)
+                        else
+                            print("[TransmogMailer][Debug] CanLearnAppearance returned false for " .. itemLink .. " to " .. recipient)
                         end
+                    else
+                        print("[TransmogMailer][Debug] Skipped recipient: " .. (recipient or "nil") .. " (invalid: _none, empty, or current player)")
                     end
+                else
                 end
             end
         end
@@ -187,9 +198,11 @@ function frame:BuildMailingList()
     for recipient, items in pairs(itemsToMail) do
         itemCount = itemCount + #items
         recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
+        print("[TransmogMailer][Debug] Recipient: " .. recipient .. ", Item count: " .. #items)
     end
     print("[TransmogMailer] Built mailing list: " ..
-    itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
+        itemCount .. " items for recipients: " .. (recipients == "" and "none" or recipients))
+    print("[TransmogMailer][Debug] Mailing list complete, total items: " .. itemCount)
 end
 
 -- Set up the next mail
