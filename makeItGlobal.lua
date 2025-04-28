@@ -8,3 +8,8 @@ _G[addonName] = addon
 function addon.DumpSV()
     DevTools_Dump(addon.db)
 end
+
+function addon.DumpMailingList()
+    addon.frame:BuildMailingList()
+    DevTools_Dump(addon.frame.mailingList)
+end

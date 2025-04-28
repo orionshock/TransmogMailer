@@ -178,12 +178,6 @@ function frame:BuildMailingList()
     end
 
     self.mailingList = itemsToMail
-    local itemCount = 0
-    local recipients = ""
-    for recipient, items in pairs(itemsToMail) do
-        itemCount = itemCount + #items
-        recipients = recipients .. (recipients == "" and "" or ", ") .. recipient
-    end
 end
 
 -- Set up the next mail
