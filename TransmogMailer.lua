@@ -1,6 +1,5 @@
 -- TransmogMailer.lua
 local addonName, addon = ...
-_G[addonName] = addon
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
@@ -83,7 +82,7 @@ function frame:BuildMailingList()
                 
                 if itemClass == LE_ITEM_CLASS_ARMOR or itemClass == LE_ITEM_CLASS_WEAPON then
                     local recipient = addon.db.mappings[itemSubClass]
-                    if recipient and recipient ~= "" and recipient ~= currentPlayer then
+                    if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
                         if CanIMogIt and CanIMogIt:IsValidAppearanceForCharacter(itemLink, recipient) then
                             itemsToMail[recipient] = itemsToMail[recipient] or {}
                             table.insert(itemsToMail[recipient], {bag = bag, slot = slot})

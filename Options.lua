@@ -54,7 +54,7 @@ function addon.InitializeSettings()
     for _, armor in ipairs(armorTypes) do
         local function GetArmorOptions()
             local container = Settings.CreateControlTextContainer()
-            container:Add("", "None", "No recipient selected")
+            container:Add("_none", "None", "No recipient selected")
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
             if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
@@ -71,8 +71,11 @@ function addon.InitializeSettings()
             return container:GetData()
         end
         
-        local setting = Settings.RegisterProxySetting(category, "armor_" .. armor.key, Settings.VarType.String, armor.label .. " Recipient", "",
-            function() return addon.db.mappings[armor.key] or "" end,
+        local setting = Settings.RegisterProxySetting(category, "armor_" .. armor.key, Settings.VarType.String, armor.label .. " Recipient", "_none",
+            function() 
+                local value = addon.db.mappings[armor.key]
+                return (value == nil or value == "") and "_none" or value 
+            end,
             function(value) addon.db.mappings[armor.key] = value end
         )
         local initializer = Settings.CreateDropdown(category, setting, GetArmorOptions, "Select the character to receive " .. armor.label .. " items")
@@ -84,7 +87,7 @@ function addon.InitializeSettings()
     for _, weapon in ipairs(weaponTypes) do
         local function GetWeaponOptions()
             local container = Settings.CreateControlTextContainer()
-            container:Add("", "None", "No recipient selected")
+            container:Add("_none", "None", "No recipient selected")
             local currentRealm = GetNormalizedRealmName()
             local currentFaction = UnitFactionGroup("player")
             if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
@@ -101,8 +104,11 @@ function addon.InitializeSettings()
             return container:GetData()
         end
         
-        local setting = Settings.RegisterProxySetting(category, "weapon_" .. weapon.key, Settings.VarType.String, weapon.label .. " Recipient", "",
-            function() return addon.db.mappings[weapon.key] or "" end,
+        local setting = Settings.RegisterProxySetting(category, "weapon_" .. weapon.key, Settings.VarType.String, weapon.label .. " Recipient", "_none",
+            function() 
+                local value = addon.db.mappings[weapon.key]
+                return (value == nil or value == "") and "_none" or value 
+            end,
             function(value) addon.db.mappings[weapon.key] = value end
         )
         local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, "Select the character to receive " .. weapon.label .. " items")
