@@ -21,5 +21,12 @@
         "ITEM_BNETACCOUNTBOUND",
         "LE_ITEM_CLASS_ARMOR",
         "LE_ITEM_CLASS_WEAPON",
+        "CUSTOM",
+        "ALT_KEY",
+        "CTRL_KEY",
+        "SHIFT_KEY",
+        "NONE_KEY",
+        "VIDEO_OPTIONS_NEED_CLIENTRESTART",
+        "VIDEO_OPTIONS_RECOMMENDED"
     ]
 }

@@ -2,31 +2,36 @@ local addonName, addon = ...
 
 local MAIL_ATTACHMENT_LIMIT = 12
 
--- Armor and weapon types (shared with Options.lua)
+-- Armor types (shared with Options.lua, keyed by Enum.ItemArmorSubclass)
 addon.armorTypes = {
-    { key = 1, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 1) or "Cloth",   equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
-    { key = 2, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 2) or "Leather", equipClasses = { "DRUID", "ROGUE" } },
-    { key = 3, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 3) or "Mail",    equipClasses = { "HUNTER", "SHAMAN" } },
-    { key = 4, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 4) or "Plate",   equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
-    { key = 6, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 6) or "Shield",   equipClasses = { "WARRIOR", "PALADIN", "SHAMAN" } },
-    { key = 0, label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, 0) or "Miscellaneous", equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "ROGUE", "HUNTER", "SHAMAN", "PALADIN", "DEATHKNIGHT", "WARRIOR" } }
+    [Enum.ItemArmorSubclass.Generic] = {
+        label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Generic),
+        equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "SHAMAN", "PALADIN" },
+        desc = "IE: Offhand and Cloaks"
+    },
+    [Enum.ItemArmorSubclass.Cloth]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Cloth), equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
+    [Enum.ItemArmorSubclass.Leather] = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Leather), equipClasses = { "DRUID", "ROGUE" } },
+    [Enum.ItemArmorSubclass.Mail]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Mail), equipClasses = { "HUNTER", "SHAMAN" } },
+    [Enum.ItemArmorSubclass.Plate]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Plate), equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
+    [Enum.ItemArmorSubclass.Shield]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Shield), equipClasses = { "WARRIOR", "PALADIN", "SHAMAN" } }
 }
 
+-- Weapon types (shared with Options.lua, keyed by Enum.ItemWeaponSubclass)
 addon.weaponTypes = {
-    { key = Enum.ItemWeaponSubclass.Axe1H,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H) or "One-Handed Axe",     equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Axe2H,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H) or "Two-Handed Axe",     equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Mace1H,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H) or "One-Handed Mace",   equipClasses = { "WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Mace2H,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H) or "Two-Handed Mace",   equipClasses = { "WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Sword1H,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H) or "One-Handed Sword", equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK" } },
-    { key = Enum.ItemWeaponSubclass.Sword2H,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H) or "Two-Handed Sword", equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Staff,    label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff) or "Staff",              equipClasses = { "DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR" } },
-    { key = Enum.ItemWeaponSubclass.Polearm,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm) or "Polearm",          equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT" } },
-    { key = Enum.ItemWeaponSubclass.Bows,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows) or "Bows",                equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
-    { key = Enum.ItemWeaponSubclass.Crossbow, label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow) or "Crossbow",        equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
-    { key = Enum.ItemWeaponSubclass.Guns,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns) or "Guns",                equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
-    { key = Enum.ItemWeaponSubclass.Dagger,   label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger) or "Dagger",            equipClasses = { "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR" } },
-    { key = Enum.ItemWeaponSubclass.Unarmed,  label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed) or "Fist Weapon",      equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID" } },
-    { key = Enum.ItemWeaponSubclass.Wand,     label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand) or "Wand",                equipClasses = { "MAGE", "PRIEST", "WARLOCK" } }
+    [Enum.ItemWeaponSubclass.Axe1H]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "SHAMAN", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Axe2H]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Mace1H]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace1H), equipClasses = { "WARRIOR", "PALADIN", "PRIEST", "SHAMAN", "DRUID", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Mace2H]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Mace2H), equipClasses = { "WARRIOR", "PALADIN", "DRUID", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Sword1H]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK" } },
+    [Enum.ItemWeaponSubclass.Sword2H]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H), equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Staff]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff), equipClasses = { "DRUID", "HUNTER", "MAGE", "PRIEST", "SHAMAN", "WARLOCK", "WARRIOR" } },
+    [Enum.ItemWeaponSubclass.Polearm]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DRUID", "DEATHKNIGHT" } },
+    [Enum.ItemWeaponSubclass.Bows]     = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Bows), equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    [Enum.ItemWeaponSubclass.Crossbow] = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow), equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    [Enum.ItemWeaponSubclass.Guns]     = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Guns), equipClasses = { "HUNTER", "WARRIOR", "ROGUE" } },
+    [Enum.ItemWeaponSubclass.Dagger]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger), equipClasses = { "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "WARRIOR" } },
+    [Enum.ItemWeaponSubclass.Unarmed]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed), equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "DRUID" } },
+    [Enum.ItemWeaponSubclass.Wand]     = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand), equipClasses = { "MAGE", "PRIEST", "WARLOCK" } }
 }
 
 -- Tooltip scanner for binding check
@@ -67,10 +72,10 @@ frame:Hide()
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
-frame.clearingMail = false -- Flag to prevent recursive ClearSendMail
+frame.clearingMail = false  -- Flag to prevent recursive ClearSendMail
 frame.mailSentTimestamp = 0 -- Debounce MAIL_SEND_SUCCESS
-frame.mailSentCount = 0 -- Track processed events per session
-frame.lastMailShow = 0 -- Debounce MAIL_SHOW
+frame.mailSentCount = 0     -- Track processed events per session
+frame.lastMailShow = 0      -- Debounce MAIL_SHOW
 
 -- Check if a recipient can learn a transmog appearance
 function addon:CanLearnAppearance(itemLink, recipient)
@@ -125,13 +130,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
     -- Check if the item is armor or weapon
     if CanIMogIt:IsItemArmor(itemLink) then
         -- For armor, check if it matches the recipient's allowed armor type
-        local armorType = nil
-        for _, typeInfo in ipairs(self.armorTypes) do
-            if typeInfo.key == itemSubClass then
-                armorType = typeInfo
-                break
-            end
-        end
+        local armorType = self.armorTypes[itemSubClass]
         if armorType then
             if not tContains(armorType.equipClasses, recipientClass) then
                 return false
@@ -141,13 +140,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
         end
     else
         -- For weapons, check if the recipient's class can equip the type
-        local weaponType = nil
-        for _, typeInfo in ipairs(self.weaponTypes) do
-            if typeInfo.key == itemSubClass then
-                weaponType = typeInfo
-                break
-            end
-        end
+        local weaponType = self.weaponTypes[itemSubClass]
         if weaponType then
             if not tContains(weaponType.equipClasses, recipientClass) then
                 return false
@@ -336,11 +329,11 @@ function addon:InitSV()
         self.db.characters[currentRealm][currentFaction][name] = class:upper()
 
         -- Initialize mappings with "_none" for all armor and weapon types
-        for _, armor in ipairs(self.armorTypes) do
-            self.db.mappings["armor_" .. armor.key] = self.db.mappings["armor_" .. armor.key] or "_none"
+        for key in pairs(self.armorTypes) do
+            self.db.mappings["armor_" .. key] = self.db.mappings["armor_" .. key] or "_none"
         end
-        for _, weapon in ipairs(self.weaponTypes) do
-            self.db.mappings["weapon_" .. weapon.key] = self.db.mappings["weapon_" .. weapon.key] or "_none"
+        for key in pairs(self.weaponTypes) do
+            self.db.mappings["weapon_" .. key] = self.db.mappings["weapon_" .. key] or "_none"
         end
 
         frame:UnregisterEvent("PLAYER_LOGIN")
