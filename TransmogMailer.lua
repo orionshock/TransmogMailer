@@ -86,8 +86,18 @@ function addon:CanLearnAppearance(itemLink, recipient)
         return false
     end
 
+    -- Check if item info is ready
+    if not CanIMogIt:IsReadyForCalculations(itemLink) then
+        return false
+    end
+
     -- Check if the item is transmogable
     if not CanIMogIt:IsTransmogable(itemLink) then
+        return false
+    end
+
+    -- Check if the transmog appearance is already known (account-wide)
+    if CanIMogIt:PlayerKnowsTransmog(itemLink) then
         return false
     end
 
@@ -279,7 +289,7 @@ function addon:MAIL_SEND_SUCCESS(event)
         frame.nextMail = nil
         frame:SetNextMail()
         if not frame.nextMail and not frame.mailingList then
-            frame:Hide()
+            self:Hide()
         end
     end
 end

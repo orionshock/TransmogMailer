@@ -4,6 +4,7 @@ _G[addonName] = addon
 -- /dump TransmogMailer
 -- /dump TransmogMailerSV
 -- /run TransmogMailer.DumpSV()
+-- /run TransmogMailer.DumpMailingList()
 
 function addon.DumpSV()
     DevTools_Dump(addon.db)

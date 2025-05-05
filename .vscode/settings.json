@@ -16,7 +16,10 @@
         "~\\.vscode\\extensions\\ketho.wow-api-0.20.6\\Annotations\\FrameXML"
     ],
     "Lua.diagnostics.globals": [
+        "CanIMogIt",
         "ITEM_SOULBOUND",
-        "ITEM_BNETACCOUNTBOUND"
+        "ITEM_BNETACCOUNTBOUND",
+        "LE_ITEM_CLASS_ARMOR",
+        "LE_ITEM_CLASS_WEAPON",
     ]
 }
