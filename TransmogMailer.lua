@@ -282,7 +282,7 @@ function addon:MAIL_SEND_SUCCESS(event)
         frame.nextMail = nil
         frame:SetNextMail()
         if not frame.nextMail and not frame.mailingList then
-            self:Hide()
+            frame:Hide()
         end
     end
 end
