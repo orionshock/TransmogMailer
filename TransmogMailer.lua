@@ -179,7 +179,9 @@ function frame:BuildMailingList()
             end
         end
     end
-
+    if not next(itemsToMail) then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[TransmogMailer]|r Nothing to Send")
+    end
     self.mailingList = itemsToMail
 end
 
