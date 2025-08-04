@@ -6,6 +6,7 @@ changelog:
   auto-generate: true
 
 ignore:
+  - images
   - .github
   - README.md
   - .gitignore
