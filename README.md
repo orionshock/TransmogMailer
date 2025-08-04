@@ -21,3 +21,5 @@ It uses **[Can I Mog It](https://www.curseforge.com/wow/addons/can-i-mog-it)** b
 
 - TransmogMailer does **not** make automatic decisions or suggestions — you configure the logic yourself in the addon settings.
 - Requires **Can I Mog It** to function properly.
+
+<img src="images/interfaceOptions.jpg" alt="Interface Options" width="600" />
