@@ -1,10 +1,10 @@
-##Interface: 50500
-##Title: TransmogMailer
-##Notes: Automatically mails BoE armor and weapons from the mailbox to alts based on armor/weapon type for transmog collection.
-##Author: Orionshock, Grok.com
-##Version: @project-version@
-##SavedVariables: TransmogMailerDB
-##Dependencies: CanIMogIt
+## Interface: 50500
+## Title: TransmogMailer
+## Notes: Automatically mails BoE armor and weapons from the mailbox to alts based on armor/weapon type for transmog collection.
+## Author: Orionshock, Grok.com
+## Version: @project-version@
+## SavedVariables: TransmogMailerDB
+## Dependencies: CanIMogIt
 ## X-Wago-ID: bGoM0160
 
 TransmogMailer.lua 
