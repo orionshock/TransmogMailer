@@ -102,49 +102,50 @@ function addon.InitializeSettings()
             desc = desc .. "\n" .. armorInfo.desc
         end
         local initializer = Settings.CreateDropdown(category, setting, GetArmorOptions, desc)
-        initializer.reinitializeOnValueChanged = true
         table.insert(addon.dependentInitializers, initializer)
     end
 
     -- Weapon mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
     for weaponKey, weaponInfo in ipairs(addon.weaponTypes) do
-        local function GetWeaponOptions()
-            local container = Settings.CreateControlTextContainer()
-            container:Add("_none", "None", "No recipient selected")
-            local currentRealm = GetNormalizedRealmName()
-            local currentFaction = UnitFactionGroup("player")
-            if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
-                for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
-                    if weaponInfo.equipClasses and tContains(weaponInfo.equipClasses, class) then
-                        local displayName = name
-                        if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] and RAID_CLASS_COLORS[class].colorStr then
-                            displayName = "|c" .. RAID_CLASS_COLORS[class].colorStr .. name .. "|r"
+        if not weaponInfo.disabled == true then
+            local function GetWeaponOptions()
+                local container = Settings.CreateControlTextContainer()
+                container:Add("_none", "None", "No recipient selected")
+                local currentRealm = GetNormalizedRealmName()
+                local currentFaction = UnitFactionGroup("player")
+                if addon.db.characters and currentRealm and currentFaction and addon.db.characters[currentRealm] and addon.db.characters[currentRealm][currentFaction] then
+                    for name, class in pairs(addon.db.characters[currentRealm][currentFaction]) do
+                        if weaponInfo.equipClasses and tContains(weaponInfo.equipClasses, class) then
+                            local displayName = name
+                            if RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] and RAID_CLASS_COLORS[class].colorStr then
+                                displayName = "|c" .. RAID_CLASS_COLORS[class].colorStr .. name .. "|r"
+                            end
+                            container:Add(name, displayName, "Send to " .. name)
                         end
-                        container:Add(name, displayName, "Send to " .. name)
                     end
                 end
+                return container:GetData()
             end
-            return container:GetData()
-        end
 
-        local setting = Settings.RegisterProxySetting(category, "weapon_" .. weaponKey, Settings.VarType.String,
-            weaponInfo.label .. " Recipient", "_none",
-            function()
-                local value = addon.db.mappings["weapon_" .. weaponKey]
-                return (value == nil or value == "") and "_none" or value
-            end,
-            function(value) addon.db.mappings["weapon_" .. weaponKey] = value end
-        )
-        local desc = "Select the character to receive " .. weaponInfo.label .. " items."
-        if weaponInfo.desc then
-            desc = desc .. "\n" .. weaponInfo.desc
+            local setting = Settings.RegisterProxySetting(category, "weapon_" .. weaponKey, Settings.VarType.String,
+                weaponInfo.label .. " Recipient", "_none",
+                function()
+                    local value = addon.db.mappings["weapon_" .. weaponKey]
+                    return (value == nil or value == "") and "_none" or value
+                end,
+                function(value)
+                    addon.db.mappings["weapon_" .. weaponKey] = value
+                end
+            )
+            local desc = "Select the character to receive " .. weaponInfo.label .. " items."
+            if weaponInfo.desc then
+                desc = desc .. "\n" .. weaponInfo.desc
+            end
+            local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, desc)
+            table.insert(addon.dependentInitializers, initializer)
         end
-        local initializer = Settings.CreateDropdown(category, setting, GetWeaponOptions, desc)
-        initializer.reinitializeOnValueChanged = true
-        table.insert(addon.dependentInitializers, initializer)
     end
-
     -- Character cleanup section
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Character Cleanup"))
 
@@ -177,8 +178,7 @@ function addon.InitializeSettings()
             end
         end
     )
-    addon.cleanupSetting = cleanupSetting -- Store for access in StaticPopup OnAccept
+    addon.cleanupSetting = cleanupSetting     -- Store for access in StaticPopup OnAccept
     local cleanupInitializer = Settings.CreateDropdown(category, cleanupSetting, GetCharacterOptions,
         "Select a character to delete from TransmogMailer")
-    cleanupInitializer.reinitializeOnValueChanged = true
 end
