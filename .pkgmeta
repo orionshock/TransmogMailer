@@ -1,0 +1,11 @@
+tools-used:
+  - BigWigsMods/packager
+
+changelog:
+  markup-type: markdown
+  auto-generate: true
+
+ignore:
+  - .github
+  - README.md
+  - .gitignore
