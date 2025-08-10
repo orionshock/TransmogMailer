@@ -107,7 +107,7 @@ function addon.InitializeSettings()
 
     -- Weapon mappings
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
-    for weaponKey, weaponInfo in ipairs(addon.weaponTypes) do
+    for weaponKey, weaponInfo in pairs(addon.weaponTypes) do
         if not weaponInfo.disabled == true then
             local function GetWeaponOptions()
                 local container = Settings.CreateControlTextContainer()
