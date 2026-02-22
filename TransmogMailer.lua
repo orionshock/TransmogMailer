@@ -2,7 +2,6 @@ local addonName, addon = ...
 _G[addonName] = addon
 local MAIL_ATTACHMENT_LIMIT = 12
 
--- Armor types (shared with Options.lua, keyed by Enum.ItemArmorSubclass)
 addon.armorTypes = {
     [Enum.ItemArmorSubclass.Generic] = {
         label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Generic),
@@ -16,7 +15,6 @@ addon.armorTypes = {
     [Enum.ItemArmorSubclass.Shield]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_ARMOR, Enum.ItemArmorSubclass.Shield), equipClasses = { "WARRIOR", "PALADIN", "SHAMAN" } }
 }
 
--- Weapon types (shared with Options.lua, keyed by Enum.ItemWeaponSubclass)
 addon.weaponTypes = {
     [Enum.ItemWeaponSubclass.Axe1H]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATH KNIGHT", "SHAMAN", "MONK" } },
     [Enum.ItemWeaponSubclass.Axe2H]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Axe2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT", "SHAMAN" } },
@@ -27,21 +25,13 @@ addon.weaponTypes = {
     [Enum.ItemWeaponSubclass.Polearm]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Polearm), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT", "MONK", "DRUID" } },
     [Enum.ItemWeaponSubclass.Sword1H]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATH KNIGHT", "MAGE", "WARLOCK", "MONK" } },
     [Enum.ItemWeaponSubclass.Sword2H]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Sword2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT" } },
-    -- [Enum.ItemWeaponSubclass.Warglaive]   = { disabled = true },
     [Enum.ItemWeaponSubclass.Staff]    = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Staff), equipClasses = { "WARRIOR", "HUNTER", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID" } },
-    -- [Enum.ItemWeaponSubclass.Bearclaw]    = { disabled = true },
-    -- [Enum.ItemWeaponSubclass.Catclaw]     = { disabled = true },
     [Enum.ItemWeaponSubclass.Unarmed]  = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Unarmed), equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "MONK", "DRUID" } },
-    -- [Enum.ItemWeaponSubclass.Generic]     = { disabled = true },
     [Enum.ItemWeaponSubclass.Dagger]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Dagger), equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" } },
-    -- [Enum.ItemWeaponSubclass.Thrown]   = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Thrown), equipClasses = { "WARRIOR", "HUNTER", "ROGUE" } },
-    -- [Enum.ItemWeaponSubclass.Obsolete3]   = { disabled = true },
     [Enum.ItemWeaponSubclass.Crossbow] = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Crossbow), equipClasses = { "WARRIOR", "HUNTER", "ROGUE" } },
     [Enum.ItemWeaponSubclass.Wand]     = { label = GetItemSubClassInfo(LE_ITEM_CLASS_WEAPON, Enum.ItemWeaponSubclass.Wand), equipClasses = { "PRIEST", "MAGE", "WARLOCK" } },
-    -- [Enum.ItemWeaponSubclass.Fishingpole] = { disabled = true },
 }
 
--- Tooltip scanner for binding check
 local tooltipFrame = CreateFrame("GameTooltip", "TransmogMailerTooltip", UIParent)
 local tooltipLeftLines = {}
 for i = 1, 5 do
@@ -52,6 +42,10 @@ for i = 1, 5 do
 end
 tooltipFrame:SetOwner(UIParent, "ANCHOR_NONE")
 
+--- Scans an inventory item tooltip to determine bind status.
+--- @param bag number Bag index.
+--- @param slot number Slot index.
+--- @return boolean isBound True when the item is soulbound or account-bound.
 local function IsBound(bag, slot)
     tooltipFrame:ClearLines()
     tooltipFrame:SetBagItem(bag, slot)
@@ -71,7 +65,6 @@ local function IsBound(bag, slot)
     return false
 end
 
--- Create frame and register events
 local frame = CreateFrame("Frame")
 addon.frame = frame
 frame:Hide()
@@ -79,12 +72,15 @@ frame:Hide()
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
-frame.clearingMail = false  -- Flag to prevent recursive ClearSendMail
-frame.mailSentTimestamp = 0 -- Debounce MAIL_SEND_SUCCESS
-frame.mailSentCount = 0     -- Track processed events per session
-frame.lastMailShow = 0      -- Debounce MAIL_SHOW
+frame.clearingMail = false
+frame.mailSentTimestamp = 0
+frame.mailSentCount = 0
+frame.lastMailShow = 0
 
--- Check if a recipient can learn a transmog appearance
+--- Evaluates whether a recipient can learn the appearance from an item link.
+--- @param itemLink string Item hyperlink.
+--- @param recipient string Recipient character name.
+--- @return boolean canLearn True when the recipient should receive the item for appearance learning.
 function addon:CanLearnAppearance(itemLink, recipient)
     local currentRealm = GetNormalizedRealmName()
     local currentFaction = UnitFactionGroup("player")
@@ -93,33 +89,27 @@ function addon:CanLearnAppearance(itemLink, recipient)
         return false
     end
 
-    -- Check if CanIMogIt is loaded
     if not CanIMogIt then
         return false
     end
 
-    -- Check if item info is ready
     if not CanIMogIt:IsReadyForCalculations(itemLink) then
         return false
     end
 
-    -- Check if the item is transmogable
     if not CanIMogIt:IsTransmogable(itemLink) then
         return false
     end
 
-    -- Check if the transmog appearance is already known (account-wide)
     if CanIMogIt:PlayerKnowsTransmog(itemLink) then
         return false
     end
 
-    -- Get item information
     local _, _, _, _, _, _, _, _, _, _, _, itemClass, itemSubClass = C_Item.GetItemInfo(itemLink)
     if not itemClass or not itemSubClass then
         return false
     end
 
-    -- Check class restrictions from CanIMogIt
     local classRestrictions = CanIMogIt:GetItemClassRestrictions(itemLink)
     if classRestrictions then
         local canEquip = false
@@ -134,9 +124,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
         end
     end
 
-    -- Check if the item is armor or weapon
     if CanIMogIt:IsItemArmor(itemLink) then
-        -- For armor, check if it matches the recipient's allowed armor type
         local armorType = self.armorTypes[itemSubClass]
         if armorType then
             if not tContains(armorType.equipClasses, recipientClass) then
@@ -146,7 +134,6 @@ function addon:CanLearnAppearance(itemLink, recipient)
             return false
         end
     else
-        -- For weapons, check if the recipient's class can equip the type
         local weaponType = self.weaponTypes[itemSubClass]
         if weaponType then
             if not tContains(weaponType.equipClasses, recipientClass) then
@@ -160,13 +147,13 @@ function addon:CanLearnAppearance(itemLink, recipient)
     return true
 end
 
--- Build mailing list
+--- Builds a recipient-to-items map from current bags based on configured mappings.
+--- @return nil
 function frame:BuildMailingList()
     self.mailingList = nil
     local itemsToMail = {}
     local currentPlayer = UnitName("player")
 
-    -- Collect BoE items to mail
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local itemLink = C_Container.GetContainerItemLink(bag, slot)
@@ -192,7 +179,8 @@ function frame:BuildMailingList()
     self.mailingList = itemsToMail
 end
 
--- Set up the next mail
+--- Prepares the next outgoing mail with up to attachment limit items.
+--- @return nil
 function frame:SetNextMail()
     if not self.mailingList or self.nextMail or self.clearingMail then
         return
@@ -219,7 +207,6 @@ function frame:SetNextMail()
             end
         end
         if onMailSlot > 1 then
-            -- Clean up empty recipient lists
             if #itemList == 0 then
                 self.mailingList[recipient] = nil
                 if next(self.mailingList) == nil then
@@ -233,10 +220,16 @@ function frame:SetNextMail()
     end
 end
 
--- OnUpdate for mail sending
+--- Resets elapsed update timer when the mail frame becomes visible.
+--- @param self Frame Mail processing frame.
+--- @return nil
 frame:SetScript("OnShow", function(self)
     self.elapsed = 0
 end)
+--- Processes periodic mail preparation and sending while visible.
+--- @param self Frame Mail processing frame.
+--- @param elapsed number Frame update delta time.
+--- @return nil
 frame:SetScript("OnUpdate", function(self, elapsed)
     if self.clearingMail then return end
     self.elapsed = self.elapsed + elapsed
@@ -260,6 +253,9 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 
+--- Handles mailbox open event and optionally starts a mailing session.
+--- @param event string Event name.
+--- @return nil
 function addon:MAIL_SHOW(event)
     if GetTime() - frame.lastMailShow < 1 then return end
     frame.lastMailShow = GetTime()
@@ -280,6 +276,9 @@ function addon:MAIL_SHOW(event)
     end
 end
 
+--- Handles successful mail send events and advances queued mail.
+--- @param event string Event name.
+--- @return nil
 function addon:MAIL_SEND_SUCCESS(event)
     local currentTime = GetTime()
     if frame.sendingMail and not frame.clearingMail and (currentTime ~= frame.mailSentTimestamp or frame.mailSentCount == 0) and (currentTime - frame.mailSentTimestamp > 0.5) then
@@ -296,6 +295,9 @@ function addon:MAIL_SEND_SUCCESS(event)
     end
 end
 
+--- Handles failed mail events and clears current mailing state.
+--- @param event string Event name.
+--- @return nil
 function addon:MAIL_FAILED(event)
     if not frame.clearingMail then
         frame.clearingMail = true
@@ -309,6 +311,9 @@ function addon:MAIL_FAILED(event)
     frame.mailSentCount = 0
 end
 
+--- Handles mailbox close event and clears current mailing state.
+--- @param event string Event name.
+--- @return nil
 function addon:MAIL_CLOSED(event)
     if not frame.clearingMail then
         frame.clearingMail = true
@@ -322,7 +327,8 @@ function addon:MAIL_CLOSED(event)
     frame.mailSentCount = 0
 end
 
--- Initialize saved variables and character data
+--- Initializes saved variables and character metadata for the current session.
+--- @return boolean initialized True when initialization completes in this call.
 function addon:InitSV()
     if GetNormalizedRealmName() and not self.db then
         self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
@@ -337,7 +343,6 @@ function addon:InitSV()
         self.db.characters[currentRealm][currentFaction] = self.db.characters[currentRealm][currentFaction] or {}
         self.db.characters[currentRealm][currentFaction][name] = class:upper()
 
-        -- Initialize mappings with "_none" for all armor and weapon types
         for key in pairs(self.armorTypes) do
             self.db.mappings["armor_" .. key] = self.db.mappings["armor_" .. key] or "_none"
         end
@@ -351,27 +356,34 @@ function addon:InitSV()
     return false
 end
 
+--- Handles addon load event and initializes settings for this addon.
+--- @param event string Event name.
+--- @param arg1 string Loaded addon name.
+--- @return nil
 function addon:ADDON_LOADED(event, arg1)
     if arg1 == addonName then
-        -- Initialize saved variables
         local svLoaded = self:InitSV()
         if svLoaded then
-            -- Initialize settings
             self.InitializeSettings()
         end
     end
 end
 
+--- Handles player login event and initializes settings if needed.
+--- @param event string Event name.
+--- @return nil
 function addon:PLAYER_LOGIN(event)
-    -- Initialize saved variables and character info
     local svLoaded = self:InitSV()
     if svLoaded then
-        -- Initialize settings
         self.InitializeSettings()
     end
 end
 
--- Dispatch events to addon methods
+--- Dispatches frame events to matching addon methods when available.
+--- @param frame Frame Event frame.
+--- @param event string Event name.
+--- @param ... any Event payload.
+--- @return nil
 frame:SetScript("OnEvent", function(frame, event, ...)
     if type(addon[event]) == "function" then
         addon[event](addon, event, ...)
@@ -385,7 +397,8 @@ frame:RegisterEvent("MAIL_CLOSED")
 frame:RegisterEvent("MAIL_SEND_SUCCESS")
 frame:RegisterEvent("MAIL_FAILED")
 
--- Slash command to open settings
+--- Opens the addon settings category from slash command.
+--- @return nil
 SLASH_TRANSMOGMAILER1 = "/transmogmailer"
 SlashCmdList["TRANSMOGMAILER"] = function()
     Settings.OpenToCategory(addon.categoryID)
