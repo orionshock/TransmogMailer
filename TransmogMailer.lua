@@ -101,7 +101,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
         return false
     end
 
-    if CanIMogIt:PlayerKnowsTransmog(itemLink) then
+    if CanIMogIt:PlayerKnowsTransmogFromItem(itemLink) then
         return false
     end
 
