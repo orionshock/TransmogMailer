@@ -67,6 +67,24 @@ function addon.InitializeSettings()
         "Select the modifier key for mailing transmog items")
     modifierInitializer.reinitializeOnValueChanged = true
 
+    --- Builds dropdown options for choosing which transmog sources to collect.
+    --- @return table options Transmog collection mode option list.
+    local function GetCollectionModeOptions()
+        local container = Settings.CreateControlTextContainer()
+        container:Add("APPEARANCE", "Appearance Only", "Collect one item for each shared appearance")
+        container:Add("ALL_ITEMS", "All Item Sources", "Collect the appearance from every item source")
+        return container:GetData()
+    end
+
+    local collectionModeSetting = Settings.RegisterProxySetting(category, "collectionMode", Settings.VarType.String,
+        "Transmog Collection", "ALL_ITEMS",
+        function() return addon.db.collectionMode end,
+        function(value) addon.db.collectionMode = value end
+    )
+    local collectionModeInitializer = Settings.CreateDropdown(category, collectionModeSetting,
+        GetCollectionModeOptions, "Choose whether to collect each appearance once or from every item source")
+    collectionModeInitializer.reinitializeOnValueChanged = true
+
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Armor Recipients"))
     for armorKey, armorInfo in pairs(addon.armorTypes) do
         --- Builds recipient options for an armor subclass mapping.

@@ -101,7 +101,13 @@ function addon:CanLearnAppearance(itemLink, recipient)
         return false
     end
 
-    if CanIMogIt:PlayerKnowsTransmogFromItem(itemLink) then
+    local knowsTransmog
+    if self.db.collectionMode == "APPEARANCE" then
+        knowsTransmog = CanIMogIt:PlayerKnowsTransmog(itemLink)
+    else
+        knowsTransmog = CanIMogIt:PlayerKnowsTransmogFromItem(itemLink)
+    end
+    if knowsTransmog then
         return false
     end
 
@@ -331,8 +337,9 @@ end
 --- @return boolean initialized True when initialization completes in this call.
 function addon:InitSV()
     if GetNormalizedRealmName() and not self.db then
-        self.db = TransmogMailerDB or { modifier = "NONE", mappings = {}, characters = {} }
+        self.db = TransmogMailerDB or { modifier = "NONE", collectionMode = "ALL_ITEMS", mappings = {}, characters = {} }
         TransmogMailerDB = self.db
+        self.db.collectionMode = self.db.collectionMode or "ALL_ITEMS"
 
         local currentRealm = GetNormalizedRealmName()
         local currentFaction = UnitFactionGroup("player")
