@@ -5,7 +5,7 @@ local MAIL_ATTACHMENT_LIMIT = 12
 addon.armorTypes = {
     [Enum.ItemArmorSubclass.Generic] = {
         label = GetItemSubClassInfo(Enum.ItemClass.Armor, Enum.ItemArmorSubclass.Generic),
-        equipClasses = { "MAGE", "PRIEST", "WARLOCK", "DRUID", "SHAMAN", "PALADIN" },
+        equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" },
         desc = "IE: Offhand and Cloaks"
     },
     [Enum.ItemArmorSubclass.Cloth]   = { label = GetItemSubClassInfo(Enum.ItemClass.Armor, Enum.ItemArmorSubclass.Cloth), equipClasses = { "MAGE", "PRIEST", "WARLOCK" } },
@@ -16,54 +16,21 @@ addon.armorTypes = {
 }
 
 addon.weaponTypes = {
-    [Enum.ItemWeaponSubclass.Axe1H]    = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Axe1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATH KNIGHT", "SHAMAN", "MONK" } },
-    [Enum.ItemWeaponSubclass.Axe2H]    = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Axe2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT", "SHAMAN" } },
+    [Enum.ItemWeaponSubclass.Axe1H]    = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Axe1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "SHAMAN", "MONK" } },
+    [Enum.ItemWeaponSubclass.Axe2H]    = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Axe2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT", "SHAMAN" } },
     [Enum.ItemWeaponSubclass.Bows]     = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Bows), equipClasses = { "WARRIOR", "HUNTER", "ROGUE" } },
     [Enum.ItemWeaponSubclass.Guns]     = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Guns), equipClasses = { "WARRIOR", "HUNTER", "ROGUE" } },
-    [Enum.ItemWeaponSubclass.Mace1H]   = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Mace1H), equipClasses = { "WARRIOR", "PALADIN", "ROGUE", "PRIEST", "DEATH KNIGHT", "SHAMAN", "MONK", "DRUID" } },
-    [Enum.ItemWeaponSubclass.Mace2H]   = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Mace2H), equipClasses = { "WARRIOR", "PALADIN", "DEATH KNIGHT", "SHAMAN", "DRUID" } },
-    [Enum.ItemWeaponSubclass.Polearm]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Polearm), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT", "MONK", "DRUID" } },
-    [Enum.ItemWeaponSubclass.Sword1H]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Sword1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATH KNIGHT", "MAGE", "WARLOCK", "MONK" } },
-    [Enum.ItemWeaponSubclass.Sword2H]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Sword2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATH KNIGHT" } },
+    [Enum.ItemWeaponSubclass.Mace1H]   = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Mace1H), equipClasses = { "WARRIOR", "PALADIN", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MONK", "DRUID" } },
+    [Enum.ItemWeaponSubclass.Mace2H]   = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Mace2H), equipClasses = { "WARRIOR", "PALADIN", "DEATHKNIGHT", "SHAMAN", "DRUID" } },
+    [Enum.ItemWeaponSubclass.Polearm]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Polearm), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT", "MONK", "DRUID" } },
+    [Enum.ItemWeaponSubclass.Sword1H]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Sword1H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "DEATHKNIGHT", "MAGE", "WARLOCK", "MONK" } },
+    [Enum.ItemWeaponSubclass.Sword2H]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Sword2H), equipClasses = { "WARRIOR", "PALADIN", "HUNTER", "DEATHKNIGHT" } },
     [Enum.ItemWeaponSubclass.Staff]    = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Staff), equipClasses = { "WARRIOR", "HUNTER", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID" } },
     [Enum.ItemWeaponSubclass.Unarmed]  = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Unarmed), equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "SHAMAN", "MONK", "DRUID" } },
     [Enum.ItemWeaponSubclass.Dagger]   = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Dagger), equipClasses = { "WARRIOR", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" } },
     [Enum.ItemWeaponSubclass.Crossbow] = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Crossbow), equipClasses = { "WARRIOR", "HUNTER", "ROGUE" } },
     [Enum.ItemWeaponSubclass.Wand]     = { label = GetItemSubClassInfo(Enum.ItemClass.Weapon, Enum.ItemWeaponSubclass.Wand), equipClasses = { "PRIEST", "MAGE", "WARLOCK" } },
 }
-
-local tooltipFrame = CreateFrame("GameTooltip", "TransmogMailerTooltip", UIParent)
-local tooltipLeftLines = {}
-for i = 1, 5 do
-    local left = tooltipFrame:CreateFontString()
-    left:SetFontObject(GameFontNormal)
-    tooltipFrame:AddFontStrings(left, tooltipFrame:CreateFontString())
-    tooltipLeftLines[i] = left
-end
-tooltipFrame:SetOwner(UIParent, "ANCHOR_NONE")
-
---- Scans an inventory item tooltip to determine bind status.
---- @param bag number Bag index.
---- @param slot number Slot index.
---- @return boolean isBound True when the item is soulbound or account-bound.
-local function IsBound(bag, slot)
-    tooltipFrame:ClearLines()
-    tooltipFrame:SetBagItem(bag, slot)
-    if not tooltipFrame:IsShown() then
-        tooltipFrame:SetOwner(UIParent, "ANCHOR_NONE")
-        tooltipFrame:SetBagItem(bag, slot)
-        if not tooltipFrame:IsShown() then
-            error(("TransmogMailer - Cannot Scan Tooltip - Bag: %s, Slot: %s"):format(bag, slot))
-        end
-    end
-    for i = 2, 5 do
-        local txt = tooltipLeftLines[i]:GetText()
-        if txt == ITEM_SOULBOUND or txt == ITEM_BNETACCOUNTBOUND then
-            return true
-        end
-    end
-    return false
-end
 
 local frame = CreateFrame("Frame")
 addon.frame = frame
@@ -72,10 +39,8 @@ frame:Hide()
 frame.mailingList = nil
 frame.nextMail = nil
 frame.sendingMail = false
-frame.clearingMail = false
-frame.mailSentTimestamp = 0
-frame.mailSentCount = 0
-frame.lastMailShow = 0
+frame.waitingForSend = false
+frame.mailboxOpen = false
 
 --- Evaluates whether a recipient can learn the appearance from an item link.
 --- @param itemLink string Item hyperlink.
@@ -84,7 +49,8 @@ frame.lastMailShow = 0
 function addon:CanLearnAppearance(itemLink, recipient)
     local currentRealm = GetNormalizedRealmName()
     local currentFaction = UnitFactionGroup("player")
-    local recipientClass = self.db.characters[currentRealm][currentFaction][recipient]
+    local characters = self.db.characters[currentRealm]
+    local recipientClass = characters and characters[currentFaction] and characters[currentFaction][recipient]
     if not recipientClass then
         return false
     end
@@ -107,7 +73,7 @@ function addon:CanLearnAppearance(itemLink, recipient)
     else
         knowsTransmog = CanIMogIt:PlayerKnowsTransmogFromItem(itemLink)
     end
-    if knowsTransmog then
+    if knowsTransmog ~= false then
         return false
     end
 
@@ -120,7 +86,9 @@ function addon:CanLearnAppearance(itemLink, recipient)
     if classRestrictions then
         local canEquip = false
         for _, allowedClass in ipairs(classRestrictions) do
-            if allowedClass == recipientClass then
+            if allowedClass == recipientClass or
+                allowedClass == LOCALIZED_CLASS_NAMES_MALE[recipientClass] or
+                allowedClass == LOCALIZED_CLASS_NAMES_FEMALE[recipientClass] then
                 canEquip = true
                 break
             end
@@ -162,17 +130,17 @@ function frame:BuildMailingList()
 
     for bag = Enum.BagIndex.Backpack, NUM_BAG_SLOTS do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            local itemLink = C_Container.GetContainerItemLink(bag, slot)
-            if itemLink and not IsBound(bag, slot) then
-                local itemID = C_Container.GetContainerItemID(bag, slot)
-                local itemClass, itemSubClass, _, _, _, _, invType = select(12, C_Item.GetItemInfo(itemID))
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            local itemLink = itemInfo and itemInfo.hyperlink
+            if itemLink and not itemInfo.isBound and not itemInfo.isLocked then
+                local _, _, _, _, _, itemClass, itemSubClass = C_Item.GetItemInfoInstant(itemLink)
                 if itemClass == Enum.ItemClass.Armor or itemClass == Enum.ItemClass.Weapon then
                     local prefix = itemClass == Enum.ItemClass.Armor and "armor_" or "weapon_"
                     local recipient = addon.db.mappings[prefix .. itemSubClass]
                     if recipient and recipient ~= "_none" and recipient ~= "" and recipient ~= currentPlayer then
                         if addon:CanLearnAppearance(itemLink, recipient) then
                             itemsToMail[recipient] = itemsToMail[recipient] or {}
-                            table.insert(itemsToMail[recipient], { bag = bag, slot = slot })
+                            table.insert(itemsToMail[recipient], { bag = bag, slot = slot, link = itemLink })
                         end
                     end
                 end
@@ -188,42 +156,64 @@ end
 --- Prepares the next outgoing mail with up to attachment limit items.
 --- @return nil
 function frame:SetNextMail()
-    if not self.mailingList or self.nextMail or self.clearingMail then
+    if not self.mailboxOpen or not self.sendingMail or self.nextMail then
         return
     end
-
-    local onMailSlot = 1
-    local linkList = ""
-    for recipient, itemList in pairs(self.mailingList) do
-        for i = #itemList, 1, -1 do
-            local itemLoc = itemList[i]
-            local itemInfo = C_Container.GetContainerItemInfo(itemLoc.bag, itemLoc.slot)
-            if itemInfo and itemInfo.stackCount then
-                linkList = (linkList ~= "" and linkList .. ", " or "") ..
-                    (itemInfo.stackCount > 1 and itemInfo.stackCount .. "x" or "") .. itemInfo.hyperlink
-                C_Container.PickupContainerItem(itemLoc.bag, itemLoc.slot)
-                ClickSendMailItemButton(onMailSlot)
-                self.nextMail = self.nextMail or { items = {}, recipient = recipient }
-                table.insert(self.nextMail.items, itemList[i])
-                itemList[i] = nil
-                onMailSlot = onMailSlot + 1
-                if onMailSlot > MAIL_ATTACHMENT_LIMIT then
-                    break
-                end
-            end
-        end
-        if onMailSlot > 1 then
-            if #itemList == 0 then
-                self.mailingList[recipient] = nil
-                if next(self.mailingList) == nil then
-                    self.mailingList = nil
-                end
-            end
-            DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[TransmogMailer]|r Sending to " .. recipient .. ": " .. linkList)
-            self:Show()
+    if not self.mailingList or not next(self.mailingList) then
+        self.sendingMail = false
+        self:Hide()
+        return
+    end
+    if CursorHasItem() then
+        addon:MAIL_FAILED()
+        return
+    end
+    -- Never include attachments or money from a manually composed message.
+    for slot = 1, MAIL_ATTACHMENT_LIMIT do
+        if GetSendMailItem(slot) then
+            addon:MAIL_FAILED()
             return
         end
     end
+    if GetSendMailMoney() > 0 or GetSendMailCOD() > 0 then
+        addon:MAIL_FAILED()
+        return
+    end
+
+    local recipient, itemList = next(self.mailingList)
+    local mail = { items = {}, recipient = recipient }
+    self.nextMail = mail
+    for i = #itemList, 1, -1 do
+        local itemLoc = itemList[i]
+        local itemInfo = C_Container.GetContainerItemInfo(itemLoc.bag, itemLoc.slot)
+        if itemInfo and itemInfo.hyperlink == itemLoc.link and not itemInfo.isLocked and
+            not itemInfo.isBound and addon:CanLearnAppearance(itemLoc.link, recipient) then
+            C_Container.PickupContainerItem(itemLoc.bag, itemLoc.slot)
+            if CursorHasItem() then
+                local slot = #mail.items + 1
+                ClickSendMailItemButton(slot)
+                if CursorHasItem() then
+                    ClearCursor()
+                    addon:MAIL_FAILED()
+                    return
+                end
+                itemLoc.itemID = itemInfo.itemID
+                itemLoc.count = itemInfo.stackCount
+                table.insert(mail.items, itemLoc)
+            end
+        end
+        table.remove(itemList, i)
+        if #mail.items == MAIL_ATTACHMENT_LIMIT then
+            break
+        end
+    end
+    if #itemList == 0 then
+        self.mailingList[recipient] = nil
+    end
+    if #mail.items == 0 then
+        self.nextMail = nil
+    end
+    self:Show()
 end
 
 --- Resets elapsed update timer when the mail frame becomes visible.
@@ -237,34 +227,44 @@ end)
 --- @param elapsed number Frame update delta time.
 --- @return nil
 frame:SetScript("OnUpdate", function(self, elapsed)
-    if self.clearingMail then return end
+    if self.waitingForSend or not self.mailboxOpen then return end
     self.elapsed = self.elapsed + elapsed
-    if self.elapsed > 1 then
-        self.elapsed = 0
+    if self.elapsed < 1 then return end
+    self.elapsed = 0
 
-        if not self.nextMail then
-            self:SetNextMail()
-            if not self.nextMail then
-                self:Hide()
-            end
+    if not self.nextMail then
+        self:SetNextMail()
+        return
+    end
+    for slot, item in ipairs(self.nextMail.items) do
+        local _, itemID, _, count = GetSendMailItem(slot)
+        if itemID ~= item.itemID or count ~= item.count then
+            addon:MAIL_FAILED()
             return
         end
-
-        if GetSendMailItem(1) then
-            SendMail(self.nextMail.recipient, "Transmog Items", "")
-        else
-            self.nextMail = nil
-            self:Hide()
+    end
+    for slot = #self.nextMail.items + 1, MAIL_ATTACHMENT_LIMIT do
+        if GetSendMailItem(slot) then
+            addon:MAIL_FAILED()
+            return
         end
     end
+    if GetSendMailMoney() > 0 or GetSendMailCOD() > 0 then
+        addon:MAIL_FAILED()
+        return
+    end
+    DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[TransmogMailer]|r Sending " .. #self.nextMail.items ..
+        " item(s) to " .. self.nextMail.recipient)
+    self.waitingForSend = true
+    SendMail(self.nextMail.recipient, "Transmog Items", "")
 end)
 
 --- Handles mailbox open event and optionally starts a mailing session.
 --- @param event string Event name.
 --- @return nil
 function addon:MAIL_SHOW(event)
-    if GetTime() - frame.lastMailShow < 1 then return end
-    frame.lastMailShow = GetTime()
+    if frame.mailboxOpen or not self.db then return end
+    frame.mailboxOpen = true
     if self.db.modifier ~= "NONE" then
         local modifier = self.db.modifier
         local isModified = IsShiftKeyDown() and modifier == "SHIFT" or
@@ -286,59 +286,38 @@ end
 --- @param event string Event name.
 --- @return nil
 function addon:MAIL_SEND_SUCCESS(event)
-    local currentTime = GetTime()
-    if frame.sendingMail and not frame.clearingMail and (currentTime ~= frame.mailSentTimestamp or frame.mailSentCount == 0) and (currentTime - frame.mailSentTimestamp > 0.5) then
-        frame.mailSentTimestamp = currentTime
-        frame.mailSentCount = frame.mailSentCount + 1
-        frame.clearingMail = true
-        ClearSendMail()
-        frame.clearingMail = false
-        frame.nextMail = nil
-        frame:SetNextMail()
-        if not frame.nextMail and not frame.mailingList then
-            frame:Hide()
-        end
-    end
+    if not frame.waitingForSend then return end
+    frame.waitingForSend = false
+    frame.nextMail = nil
+    -- Blizzard resets the compose frame on this event. Prepare the next
+    -- message on a later update, after all event handlers have run.
+    frame.elapsed = 0
+    frame:Show()
 end
 
---- Handles failed mail events and clears current mailing state.
---- @param event string Event name.
---- @return nil
-function addon:MAIL_FAILED(event)
-    if not frame.clearingMail then
-        frame.clearingMail = true
-        ClearSendMail()
-        frame.clearingMail = false
-    end
+--- Stops the queue, leaving unsent attachments available for manual recovery.
+function addon:MAIL_FAILED()
     frame:Hide()
     frame.nextMail = nil
     frame.mailingList = nil
     frame.sendingMail = false
-    frame.mailSentCount = 0
+    frame.waitingForSend = false
 end
 
---- Handles mailbox close event and clears current mailing state.
---- @param event string Event name.
---- @return nil
-function addon:MAIL_CLOSED(event)
-    if not frame.clearingMail then
-        frame.clearingMail = true
-        ClearSendMail()
-        frame.clearingMail = false
-    end
-    frame:Hide()
-    frame.nextMail = nil
-    frame.mailingList = nil
-    frame.sendingMail = false
-    frame.mailSentCount = 0
+function addon:MAIL_CLOSED()
+    self:MAIL_FAILED()
+    frame.mailboxOpen = false
 end
 
 --- Initializes saved variables and character metadata for the current session.
 --- @return boolean initialized True when initialization completes in this call.
 function addon:InitSV()
-    if GetNormalizedRealmName() and not self.db then
+    if GetNormalizedRealmName() and UnitFactionGroup("player") and UnitName("player") and not self.db then
         self.db = TransmogMailerDB or { modifier = "NONE", collectionMode = "ALL_ITEMS", mappings = {}, characters = {} }
         TransmogMailerDB = self.db
+        self.db.modifier = self.db.modifier or "NONE"
+        self.db.mappings = self.db.mappings or {}
+        self.db.characters = self.db.characters or {}
         self.db.collectionMode = self.db.collectionMode or "ALL_ITEMS"
 
         local currentRealm = GetNormalizedRealmName()
@@ -408,5 +387,7 @@ frame:RegisterEvent("MAIL_FAILED")
 --- @return nil
 SLASH_TRANSMOGMAILER1 = "/transmogmailer"
 SlashCmdList["TRANSMOGMAILER"] = function()
-    Settings.OpenToCategory(addon.categoryID)
+    if addon.categoryID then
+        Settings.OpenToCategory(addon.categoryID)
+    end
 end

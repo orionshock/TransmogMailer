@@ -58,7 +58,7 @@ function addon.InitializeSettings()
         return container:GetData()
     end
 
-    local modifierSetting = Settings.RegisterProxySetting(category, "modifier", Settings.VarType.String, "Modifier Key",
+    local modifierSetting = Settings.RegisterProxySetting(category, addonName .. "_modifier", Settings.VarType.String, "Modifier Key",
         "NONE",
         function() return addon.db.modifier end,
         function(value) addon.db.modifier = value end
@@ -76,7 +76,7 @@ function addon.InitializeSettings()
         return container:GetData()
     end
 
-    local collectionModeSetting = Settings.RegisterProxySetting(category, "collectionMode", Settings.VarType.String,
+    local collectionModeSetting = Settings.RegisterProxySetting(category, addonName .. "_collectionMode", Settings.VarType.String,
         "Transmog Collection", "ALL_ITEMS",
         function() return addon.db.collectionMode end,
         function(value) addon.db.collectionMode = value end
@@ -108,7 +108,7 @@ function addon.InitializeSettings()
             return container:GetData()
         end
 
-        local setting = Settings.RegisterProxySetting(category, "armor_" .. armorKey, Settings.VarType.String,
+        local setting = Settings.RegisterProxySetting(category, addonName .. "_armor_" .. armorKey, Settings.VarType.String,
             armorInfo.label .. " Recipient", "_none",
             function()
                 local value = addon.db.mappings["armor_" .. armorKey]
@@ -126,7 +126,7 @@ function addon.InitializeSettings()
 
     layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Weapon Recipients"))
     for weaponKey, weaponInfo in pairs(addon.weaponTypes) do
-        if not weaponInfo.disabled == true then
+        if not weaponInfo.disabled then
             --- Builds recipient options for a weapon subclass mapping.
             --- @return table options Weapon recipient option list.
             local function GetWeaponOptions()
@@ -148,7 +148,7 @@ function addon.InitializeSettings()
                 return container:GetData()
             end
 
-            local setting = Settings.RegisterProxySetting(category, "weapon_" .. weaponKey, Settings.VarType.String,
+            local setting = Settings.RegisterProxySetting(category, addonName .. "_weapon_" .. weaponKey, Settings.VarType.String,
                 weaponInfo.label .. " Recipient", "_none",
                 function()
                     local value = addon.db.mappings["weapon_" .. weaponKey]
@@ -190,7 +190,7 @@ function addon.InitializeSettings()
         return container:GetData()
     end
 
-    local cleanupSetting = Settings.RegisterProxySetting(category, "cleanup_character", Settings.VarType.String,
+    local cleanupSetting = Settings.RegisterProxySetting(category, addonName .. "_cleanup_character", Settings.VarType.String,
         "Character to Delete", "",
         function() return addon.cleanupValue or "" end,
         function(value)

@@ -10,3 +10,4 @@ ignore:
   - .github
   - README.md
   - .gitignore
+  - AGENTS.md

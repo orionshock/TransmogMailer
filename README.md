@@ -6,10 +6,13 @@ It uses **[Can I Mog It](https://www.curseforge.com/wow/addons/can-i-mog-it)** b
 
 ## 🛠 Basic Usage
 
-1. **Install Can I Mog It** alongside TransmogMailer.
+1. **Install Can I Mog It** alongside TransmogMailer on WoW Forever (interface `16001`).
 2. Log in to **each character** you want to track. Wait a moment for *Can I Mog It* to scan that character’s known appearances.
 3. Once all relevant characters have been scanned, go to **Blizzard Options → AddOns → TransmogMailer**.
-4. There, you can configure which characters should receive which types of gear.
+4. Configure recipients, choose a collection mode, and select a modifier key. **None disables mailing.**
+5. Hold the selected modifier while opening a mailbox to send eligible unbound gear. Mailing waits for confirmation after each batch of up to 12 attachments.
+
+If a send fails or attachments change, the queue stops. Recover unsent attachments from the compose window, then reopen the mailbox to try again.
 
 ## 🔍 What It Does
 

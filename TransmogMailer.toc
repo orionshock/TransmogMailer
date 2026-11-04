@@ -1,4 +1,4 @@
-## Interface: 50500
+## Interface: 16001
 ## Title: TransmogMailer
 ## Notes: Automatically mails BoE armor and weapons from the mailbox to alts based on armor/weapon type for transmog collection.
 ## Author: Orionshock, Grok.com, GitHubCopilot (YAY AI SLOP)
